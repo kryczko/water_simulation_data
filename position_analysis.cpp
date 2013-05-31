@@ -45,24 +45,24 @@ cout << "Please enter the number of timesteps: ";
 cin >> timesteps;
 cout << "Please enter the lattice constant for your periodic cube: ";
 cin >> lattice;
-// end of main menu
+// end of main menu*/
 
 //read the inputfile
 inputfile.open(infile.c_str());
 
-double a,b,c,x[number_of_atoms*timesteps], y[number_of_atoms*timesteps], z[number_of_atoms*timesteps];
+double x[number_of_atoms*timesteps], y[number_of_atoms*timesteps], z[number_of_atoms*timesteps];
 int counter = 0;
 
 while (!inputfile.eof())
 {
-	//inputfile >> x[counter] >> y[counter] >> z[counter];	
-	inputfile >> a >> b >> c;
+	inputfile >> x[counter] >> y[counter] >> z[counter];	
 	counter ++;
+	
 }
-cout << counter << endl;
+
 // done reading inputfile
 
-/*
+
 //decision for oodistance
 if (oodistance == 'y')
 {
@@ -146,7 +146,7 @@ else
 
 
 
-*/
+
 inputfile.close();
 
 
