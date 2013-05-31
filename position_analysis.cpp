@@ -5,6 +5,19 @@
 
 using namespace std;
 
+int pbc_round(double input)
+{
+	int i  = input;
+	
+	if (abs(input - i) >= 0.5)
+	{
+		if (input > 0) {i += 1;}
+		if (input < 0) {i -= 1;}
+	}
+return i;
+}
+
+
 int main()
 {
 // file streams
@@ -14,6 +27,7 @@ ofstream oo_outputfile, oh_outputfile, angle_outputfile;
 char oodistance, ohdistance, angle; 
 string infile;
 int timesteps, number_of_atoms;
+double lattice;
 
 // main menu for the program
 cout << "\n\nWelcome to the bulk-water data analysis program!\n\n";
@@ -29,54 +43,72 @@ cout << "Please enter the number of atoms: ";
 cin >> number_of_atoms;
 cout << "Please enter the number of timesteps: ";
 cin >> timesteps;
+cout << "Please enter the lattice constant for your periodic cube: ";
+cin >> lattice;
 // end of main menu
 
 //read the inputfile
 inputfile.open(infile.c_str());
 
-double x[number_of_atoms*timesteps], y[number_of_atoms*timesteps], z[number_of_atoms*timesteps];
+double a,b,c,x[number_of_atoms*timesteps], y[number_of_atoms*timesteps], z[number_of_atoms*timesteps];
 int counter = 0;
 
 while (!inputfile.eof())
 {
-	inputfile >> x[counter] >> y[counter] >> z[counter];	
+	//inputfile >> x[counter] >> y[counter] >> z[counter];	
+	inputfile >> a >> b >> c;
 	counter ++;
 }
+cout << counter << endl;
 // done reading inputfile
 
-
+/*
 //decision for oodistance
 if (oodistance == 'y')
 {
 	oo_outputfile.open("oo_avg_distance.dat");
-	
-	double oxatoms[timesteps*number_of_atoms/3], oyatoms[timesteps*number_of_atoms/3], ozatoms[timesteps*number_of_atoms/3];
-	int k(0);
-	for (int i = 0; i < timesteps - 1; i ++)
-	{
-		for (int j = 0; j < timesteps*number_of_atoms; j ++)
-		{
-			if (j == number_of_atoms/3 + i*number_of_atoms)
-			{	
-				j += 2*number_of_atoms/3;
-			}
-				
-			oxatoms[k] = x[j];
-			oyatoms[k] = y[j];
-			ozatoms[k] = z[j];	
-			
-			k ++;
-		
-		}
-	}	
-	
-	double pbc_oxatoms[10*k], pbc_oyatoms[10*k], pbc_ozatoms[10*k];
+	double ox[number_of_atoms/3], oy[number_of_atoms/3], oz[number_of_atoms/3];
+	double dx, dy, dz;
+	double difference[number_of_atoms/3 - 1], last_difference[number_of_atoms/3 - 1];	
 
-	for (int i = 0; i < timesteps*number_of_atoms; i ++)
+	for (int i = 0; i < timesteps; i ++)
 	{
-		pbc
+		for (int j = 0; j < number_of_atoms/3; j ++)
+		{
+			ox[j] = lattice*x[j + i*number_of_atoms];
+			oy[j] = lattice*y[j + i*number_of_atoms];
+			oz[j] = lattice*z[j + i*number_of_atoms];
+		}
 		
+		for (int k = 0; k < number_of_atoms/3 - 1; k ++)
+		{
+			for (int n = 1; n < number_of_atoms/3; n ++)
+			{
+				dx = ox[n] - ox[k];
+				dy = oy[n] - oy[k];
+				dz = oz[n] - oz[k];
+				
+				dx -= lattice*pbc_round(dx/lattice);
+				dy -= lattice*pbc_round(dy/lattice);
+				dz -= lattice*pbc_round(dz/lattice);
+			
+				double distance = sqrt( dx*dx + dy*dy + dz*dz );
+				difference[n - 1] = distance;
+			}
 		
+			double lowest = difference[0];
+			for ( int w = 1; w < number_of_atoms/3 - 1; w ++)
+			{
+				if ( difference[w] < lowest )
+				{
+					lowest = difference[w];
+				}
+			}
+			
+			last_difference[k] = lowest;
+			oo_outputfile << lowest << endl;	
+		}					
+	}	
 	cout << "\n\nYour O-O average distance data with respect to timesteps has been placed in \"oo_avg_distance.dat\" and can now be easily plotted with gnuplot.\n\n"; 
 }
 else
@@ -114,7 +146,8 @@ else
 
 
 
-
+*/
+inputfile.close();
 
 
 
