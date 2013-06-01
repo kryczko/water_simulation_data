@@ -17,6 +17,19 @@ int pbc_round(double input)
 return i;
 }
 
+double min_distance(double array[], int length)
+{
+double min = array[0];
+for (int i = 1; i < length; i ++)
+{
+	if (array[i] < min)
+	{
+		min = array[i];
+	}
+}
+return min;
+}
+
 
 int main()
 {
@@ -68,8 +81,9 @@ if (oodistance == 'y')
 {
 	oo_outputfile.open("oo_avg_distance.dat");
 	double ox[number_of_atoms/3], oy[number_of_atoms/3], oz[number_of_atoms/3];
-	double dx, dy, dz;
-	double difference[number_of_atoms/3 - 1], last_difference[number_of_atoms/3 - 1];	
+	double dx, dy, dz, lowest;
+	int bin_number;
+	double difference[number_of_atoms/3 - 1], last_difference[(number_of_atoms/3-1)*timesteps], bin[10] = {0,0,0,0,0,0,0,0,0,0};	
 
 	for (int i = 0; i < timesteps; i ++)
 	{
@@ -82,7 +96,7 @@ if (oodistance == 'y')
 		
 		for (int k = 0; k < number_of_atoms/3 - 1; k ++)
 		{
-			for (int n = 1; n < number_of_atoms/3; n ++)
+			for (int n = k + 1; n < number_of_atoms/3; n ++)
 			{
 				dx = ox[n] - ox[k];
 				dy = oy[n] - oy[k];
@@ -94,21 +108,27 @@ if (oodistance == 'y')
 			
 				double distance = sqrt( dx*dx + dy*dy + dz*dz );
 				difference[n - 1] = distance;
-			}
-		
-			double lowest = difference[0];
-			for ( int w = 1; w < number_of_atoms/3 - 1; w ++)
-			{
-				if ( difference[w] < lowest )
-				{
-					lowest = difference[w];
-				}
-			}
 			
-			last_difference[k] = lowest;
-			oo_outputfile << lowest << endl;	
-		}					
-	}	
+					
+			}
+
+		 last_difference[k + i*number_of_atoms/3] = min_distance(difference, number_of_atoms/3 - 1);
+		}
+
+	
+					
+	}
+
+	for ( int i = 0; i < (number_of_atoms/3-1)*timesteps; i ++)
+	{
+		bin_number = last_difference[i];
+		bin[bin_number] += 1;
+	}
+	for(int i = 0; i < 10; i ++)
+	{
+		oo_outputfile << i << "\t" <<  bin[i]/2000 << endl;
+		oo_outputfile << i + 1 << "\t" << bin [i]/2000 << endl;
+	}
 	cout << "\n\nYour O-O average distance data with respect to timesteps has been placed in \"oo_avg_distance.dat\" and can now be easily plotted with gnuplot.\n\n"; 
 }
 else
