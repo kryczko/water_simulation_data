@@ -83,7 +83,7 @@ if (oodistance == 'y')
 	double ox[number_of_atoms/3], oy[number_of_atoms/3], oz[number_of_atoms/3];
 	double dx, dy, dz, lowest;
 	int bin_number;
-	double last_difference[(number_of_atoms/3-1)*timesteps], bin[10] = {};	
+	double last_difference[(number_of_atoms/3-1)*timesteps], bin[100] = {};	
 
 	for (int i = 0; i < timesteps; i ++)
 	{
@@ -121,15 +121,17 @@ if (oodistance == 'y')
 
 	for ( int i = 0; i < (number_of_atoms/3-1)*timesteps; i ++)
 	{
-		oo_outputfile << i << "\t" <<  last_difference[i] << endl;	
-		bin_number = last_difference[i];
-		bin[bin_number] += 1;
+		if ((last_difference[i] != 0 || last_difference[i] != 0.0) && (last_difference[i] < 7.0))
+		{
+			bin_number = last_difference[i]*10;
+			bin[bin_number] += 1;
+		}
 	}
-/*	for(int i = 0; i < 10; i ++)
+	for(int i = 0; i < 100; i ++)
 	{
-		oo_outputfile << i << "\t" <<  bin[i]/2000 << endl;
-		oo_outputfile << i + 1 << "\t" << bin [i]/2000 << endl;
-	}*/
+		oo_outputfile << i << "\t" << bin[i]/126000 << endl;
+		oo_outputfile << i + 1 << "\t" << bin[i]/126000 << endl;
+	}
 	cout << "\n\nYour O-O average distance data with respect to timesteps has been placed in \"oo_avg_distance.dat\" and can now be easily plotted with gnuplot.\n\n"; 
 }
 else
