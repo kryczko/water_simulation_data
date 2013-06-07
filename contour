@@ -1,0 +1,13 @@
+set terminal pngcairo enhanced font "arial,10" fontscale 1.0 size 1000, 1000 
+set output 'contours.18.png'
+set view 60, 30, 0.85, 1.1
+set samples 25, 25
+set isosamples 26, 26
+set contour base
+set cntrparam bspline
+set title "3D gnuplot demo - contour of Sinc function" 
+set xlabel "X axis" 
+set ylabel "Y axis" 
+set zlabel "Z axis" 
+set zlabel  offset character 1, 0, 0 font "" textcolor lt -1 norotate
+splot [-12:12.01] [-12:12.01] sin(sqrt(x**2+y**2)) / sqrt(x**2+y**2)

@@ -35,9 +35,9 @@ int main()
 {
 // file streams
 ifstream inputfile;
-ofstream oo_outputfile, oh_outputfile, angle_outputfile;
+ofstream oo_outputfile, oh_outputfile, angle_outputfile, hbonds_outputfile;
 
-char oodistance, ohdistance, angle; 
+char oodistance, ohdistance, angle, hbonds; 
 string infile;
 int timesteps, number_of_atoms;
 double lattice;
@@ -50,6 +50,8 @@ cout << "If you would like to create a histogram of probability with respect to 
 cin >> ohdistance;
 cout << "If you would like to create a histogram of probability with respect to the H-O-H angle enter \"y\", if not enter \"n\": ";
 cin >> angle;
+cout << "If you would like to create a histogram of the number of H-bonds with respect to the z-axis enter \"y\", if not enter \"n\": ";
+cin >> hbonds;
 cout << "Please enter the filename of your file: ";
 cin >> infile;
 cout << "Please enter the number of atoms: ";
@@ -119,21 +121,25 @@ if (oodistance == 'y')
 	
 					
 	}
-
+	int n = 0;
+	double sum(0);
 	for ( int i = 0; i < (number_of_atoms/3-1)*timesteps; i ++)
 	{
 		if ((last_difference[i] != 0 || last_difference[i] != 0.0) && (last_difference[i] < 7.0))
 		{
 			bin_number = last_difference[i]*10;
 			bin[bin_number] += 1;
+			sum += last_difference[i];
+			n ++;
 		}
 	}
+	oo_outputfile << "# The average is " << sum/n << "\n\n";
 	for(int i = 0; i < 100; i ++)
 	{
-		oo_outputfile << i/10. << "\t" << bin[i]/126000 << endl;
-		oo_outputfile << i/10. + 1 << "\t" << bin[i]/126000 << endl;
+		oo_outputfile << i << "\t" << bin[i]/126000 << endl;
+		oo_outputfile << i + 1 << "\t" << bin[i]/126000 << endl;
 	}
-	cout << "\n\nYour O-O histogram data has been placed in \"oo_avg_distance.dat\" and can now be easily plotted with gnuplot.\n\n"; 
+	cout << "\n\nYour O-O histogram data has been placed in \"oo_histogram.dat\" and can now be easily plotted with gnuplot.\n\n"; 
 }
 else
 {
@@ -188,19 +194,24 @@ if (ohdistance == 'y')
 			final_distance[g + i*2*number_of_atoms/3] = distance[g];
 		}
 			
-	}	
+	}
+	double sum(0);
+	int n(0);	
 	for (int i = 0; i < 2*number_of_atoms/3*timesteps; i ++)
 	{
 	
 		bin_number = final_distance[i]*100;
 		bin[bin_number] += 1;
+		sum += final_distance[i];
+		n ++;
 	}	
+	oh_outputfile << "# The average is " << sum/n << "\n\n";
 	for (int j = 0; j < 200; j ++)
 	{
 		oh_outputfile << j << "\t" << bin[j]/256000. << endl;
 		oh_outputfile << j + 1 << "\t" << bin[j]/256000. << endl;
 	}
-        cout << "\n\nYour O-H distance histogram data has been placed in \"oh_avg_distance.dat\" and can now be easily plotted with gnuplot.\n\n";
+        cout << "\n\nYour O-H distance histogram data has been placed in \"oh_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
 }
 else
 {
@@ -258,25 +269,118 @@ if (angle == 'y')
                 }
 	
 	}
-	
+	double sum(0);
+	int n(0);
 	for (int i = 0; i < number_of_atoms/3*timesteps; i ++)
 	{
 		bin_number = angle[i]*100;
 		bin[bin_number] += 1;
+		sum += angle[i];
+		n ++;
 	}
+	angle_outputfile << "# The average is " << sum/n << "\n\n";
 	for (int j = 0; j < 20000; j ++)
 	{
-		angle_outputfile << j << "\t" << bin[j] << endl;
-		angle_outputfile << j + 1 << "\t" << bin[j] << endl;
+		angle_outputfile << j << "\t" << bin[j]/128000. << endl;
+		angle_outputfile << (j + 1) << "\t" << bin[j]/128000. << endl;
 	}
 
-        cout << "\n\nYour H-O-H angle histogram data has been placed in \"avg_angle.dat\" and can now be easily plotted with gnuplot.\n\n";
+        cout << "\n\nYour H-O-H angle histogram data has been placed in \"angle_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
 }
 else
 {
         cout << "\n\nYou either entered the wrong key or you do not want to plot the H-O-H angle.\n\n";
 }
 
+if (hbonds == 'y')
+{
+	hbonds_outputfile.open("hbonds_histogram.dat");
+	
+	double ox[number_of_atoms/3], oy[number_of_atoms/3], oz[number_of_atoms/3], hx[2*number_of_atoms/3], hy[2*number_of_atoms/3], hz[2*number_of_atoms/3];
+	double last_difference[(number_of_atoms/3-1)*timesteps], ohdotx[2*number_of_atoms*number_of_atoms/9], ohdoty[2*number_of_atoms*number_of_atoms/9], ohdotz[2*number_of_atoms*number_of_atoms/9], ohfinal_distance[2*number_of_atoms*number_of_atoms/9*timesteps], oodifference[timesteps*number_of_atoms*number_of_atoms/9];
+	double dxo, dyo, dzo, dxh1, dxh2, dyh1, dyh2, dzh1, dzh2;	
+
+	for (int i = 0; i < timesteps; i ++)
+        {
+                for (int j = 0; j < number_of_atoms/3; j ++)
+                {
+                        ox[j] = lattice*x[j + i*number_of_atoms];
+                        oy[j] = lattice*y[j + i*number_of_atoms];
+                        oz[j] = lattice*z[j + i*number_of_atoms];
+                }
+
+		 for (int k = 0; k < 2*number_of_atoms/3; k ++)
+                {
+                        hx[k] = lattice*x[number_of_atoms/3 + k + i*number_of_atoms];
+                        hy[k] = lattice*y[number_of_atoms/3 + k + i*number_of_atoms];
+                        hz[k] = lattice*z[number_of_atoms/3 + k + i*number_of_atoms];
+                }
+
+		for (int u = 0; u < number_of_atoms/3; u ++)
+		{
+			for (int g = 0; g < 2*number_of_atoms/3; g ++)
+			{
+				dxh1 = ox[u] - hx[2*g];
+				dxh2 = ox[u] - hx[2*g + 1];
+				dyh1 = oy[u] - hy[2*g];
+				dyh2 = oy[u] - hy[2*g + 1];
+				dzh1 = oz[u] - hz[2*g];
+				dzh2 = oz[u] - hz[2*g + 1];
+
+				dxh1 -= lattice*pbc_round(dxh1/lattice);
+				dxh2 -= lattice*pbc_round(dxh2/lattice);
+				dyh1 -= lattice*pbc_round(dyh1/lattice);
+				dyh2 -= lattice*pbc_round(dyh2/lattice);
+				dzh1 -= lattice*pbc_round(dzh1/lattice);
+				dzh2 -= lattice*pbc_round(dzh2/lattice);
+				
+				ohdotx[2*g + u*2*number_of_atoms/3] = dxh1;
+				ohdotx[2*g + 1 + u*2*number_of_atoms/3] = dxh2;
+				ohdoty[2*g + u*2*number_of_atoms/3] = dyh1;
+                                ohdoty[2*g + 1 + u*2*number_of_atoms/3] = dyh2;
+				ohdotz[2*g + u*2*number_of_atoms/3] = dzh1;
+                                ohdotz[2*g + 1 + u*2*number_of_atoms/3] = dzh2;
+				
+				ohfinal_distance[2*g + u*2*number_of_atoms/3 + i*2*number_of_atoms*number_of_atoms/9] = sqrt ( dxh1*dxh1 + dyh1*dyh1 + dzh1*dzh1 );
+				ohfinal_distance[2*g + 1 + u*2*number_of_atoms/3 + i*2*number_of_atoms*number_of_atoms/9] = sqrt ( dxh2*dxh2 + dyh2*dyh2 + dzh2*dzh2 );
+			}
+
+		}
+
+                for (int k = 0; k < number_of_atoms/3; k ++)
+                {
+                        for (int n = 0; n < number_of_atoms/3; n ++)
+                        {
+                                dxo = ox[n] - ox[k];
+                                dyo = oy[n] - oy[k];
+                                dzo = oz[n] - oz[k];
+
+                                dxo -= lattice*pbc_round(dxo/lattice);
+                                dyo -= lattice*pbc_round(dyo/lattice);
+                                dzo -= lattice*pbc_round(dzo/lattice);
+
+                                double distance = sqrt( dxo*dxo + dyo*dyo + dzo*dzo );
+                                oodifference[n + k*number_of_atoms/3 + i*number_of_atoms*number_of_atoms/9] = distance;
+
+                        }
+
+                
+                }
+        }
+	for (int i = 0; i < timesteps*number_of_atoms*number_of_atoms/9; i ++)
+	{
+		if (oodifference[i] > 0.0 && oodifference[i] < 3.6 && ohfinal_distance[i] > 1.2 && ohfinal_distance[i] < 2.4)
+		{
+			hbonds_outputfile << oodifference[i] << "\t" << ohfinal_distance[i] << endl;
+		}
+	}
+
+	cout << "\n\nYour H-bond histogram data has been placed in \"hbonds_histogram.dat\" and can now easily be plotted with gnuplot.\n\n";
+}
+else
+{
+	cout << "\n\nYou either entered the wrong key or you do not want to plot the H-bond histogram.\n\n";
+}
 
 
 
@@ -286,7 +390,7 @@ inputfile.close();
 oo_outputfile.close();
 oh_outputfile.close();
 angle_outputfile.close();
-
+hbonds_outputfile.close();
 
 return 0;
 }
