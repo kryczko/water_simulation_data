@@ -297,9 +297,9 @@ if (hbonds == 'y')
 	hbonds_outputfile.open("hbonds_histogram.dat");
 	
 	double ox[number_of_atoms/3], oy[number_of_atoms/3], oz[number_of_atoms/3], hx[2*number_of_atoms/3], hy[2*number_of_atoms/3], hz[2*number_of_atoms/3];
-	double last_difference[(number_of_atoms/3-1)*timesteps], ohdotx[2*number_of_atoms*number_of_atoms/9], ohdoty[2*number_of_atoms*number_of_atoms/9], ohdotz[2*number_of_atoms*number_of_atoms/9], ohfinal_distance[2*number_of_atoms*number_of_atoms/9], oodifference[number_of_atoms*number_of_atoms/9], bin[64]={};
+	double ohdifference[2*number_of_atoms*number_of_atoms/9], oodifference[number_of_atoms*number_of_atoms/9], nhlist[number_of_atoms/3][5], nolist[number_of_atoms/3][5];
 	double dxo, dyo, dzo, dxh1, dxh2, dyh1, dyh2, dzh1, dzh2;
-	int bin_number;	
+		
 
 	for (int i = 0; i < timesteps; i ++)
         {
@@ -321,6 +321,7 @@ if (hbonds == 'y')
 		{
 			for (int g = 0; g < 2*number_of_atoms/3; g ++)
 			{
+		
 				dxh1 = ox[u] - hx[2*g];
 				dxh2 = ox[u] - hx[2*g + 1];
 				dyh1 = oy[u] - hy[2*g];
@@ -335,56 +336,56 @@ if (hbonds == 'y')
 				dzh1 -= lattice*pbc_round(dzh1/lattice);
 				dzh2 -= lattice*pbc_round(dzh2/lattice);
 				
-				/*ohdotx[2*g + u*2*number_of_atoms/3] = dxh1;
-				ohdotx[2*g + 1 + u*2*number_of_atoms/3] = dxh2;
-				ohdoty[2*g + u*2*number_of_atoms/3] = dyh1;
-                                ohdoty[2*g + 1 + u*2*number_of_atoms/3] = dyh2;
-				ohdotz[2*g + u*2*number_of_atoms/3] = dzh1;
-                                ohdotz[2*g + 1 + u*2*number_of_atoms/3] = dzh2;*/
+				ohdifference[2*g + u*2*number_of_atoms/3] = sqrt ( dxh1*dxh1 + dyh1*dyh1 + dzh1*dzh1 );
+				ohdifference[2*g + 1 + u*2*number_of_atoms/3] = sqrt ( dxh2*dxh2 + dyh2*dyh2 + dzh2*dzh2 );
 				
-				ohfinal_distance[2*g + u*2*number_of_atoms/3] = sqrt ( dxh1*dxh1 + dyh1*dyh1 + dzh1*dzh1 );
-				ohfinal_distance[2*g + 1 + u*2*number_of_atoms/3] = sqrt ( dxh2*dxh2 + dyh2*dyh2 + dzh2*dzh2 );
 			}
-
 		}
+		
+		for (int q = 0; q < number_of_atoms/3; q ++)
+		{
+			int c = 0, d = 1;
+			nhlist[q][c] = q;			
 
-                for (int k = 0; k < number_of_atoms/3; k ++)
-                {
-                        for (int n = 0; n < number_of_atoms/3; n ++)
-                        {
-                                dxo = ox[n] - ox[k];
-                                dyo = oy[n] - oy[k];
-                                dzo = oz[n] - oz[k];
-
-                                dxo -= lattice*pbc_round(dxo/lattice);
+			for (int w = 0; w < 2*number_of_atoms/3; w ++)
+			{
+				if (ohdifference[w + q*2*number_of_atoms/3] < 1.2)
+				{	
+					nhlist[q][d] = w + q*2*number_of_atoms/3;
+					d ++;
+				}
+			}
+		}
+		
+		for ( int p = 0; p < number_of_atoms/3; p ++)
+		{
+			for (int m = 0; m < number_of_atoms/3; m ++)
+			{
+				dxo = ox[p] - ox[m];
+				dyo = ox[p] - ox[m];
+				dzo = ox[p] - ox[m];					
+				
+				dxo -= lattice*pbc_round(dxo/lattice);
                                 dyo -= lattice*pbc_round(dyo/lattice);
                                 dzo -= lattice*pbc_round(dzo/lattice);
-
-                                double distance = sqrt( dxo*dxo + dyo*dyo + dzo*dzo );
-                                oodifference[n + k*number_of_atoms/3] = distance;
-
-                        }
-
-                
-                }
-        
-		for (int t = 0; t < number_of_atoms/3; t ++)
-		{
-			for (int d = 0; d < number_of_atoms/3; d ++)
-			{
-				if (ohfinal_distance[2*d + t*2*number_of_atoms/3] <= 2.4 &&  ohfinal_distance[2*d + 1 + t*2*number_of_atoms/3] >= 1.2 && oodifference[d + t*number_of_atoms/3] <= 3.6 && oodifference[d + t*number_of_atoms/3] >= 0.0)
-				 {
-					bin[t] ++;
-				 }
+				
+				oodifference[m + p*number_of_atoms/3] = sqrt ( dxo*dxo + dyo*dyo + dzo*dzo );
 			}
 		}
-	}
-	for (int i = 0; i < 64; i ++)
-	{
-		hbonds_outputfile << oz[i] << "\t" << bin[i]/2000. << endl;
-		
-	}
 
+		for (int p = 0; p < number_of_atoms/3 ; p ++)
+		{
+			for (int m = 0; m < number_of_atoms/3; m ++)
+			{
+				if (oodifference[m + p*number_of_atoms/3] > 0.0 && oodifference[m + p*number_of_atoms/3] < 3.6)
+				{
+					hbondo_distance = 
+				}
+			}
+		
+		}
+        }	
+	
 	cout << "\n\nYour H-bond histogram data has been placed in \"hbonds_histogram.dat\" and can now easily be plotted with gnuplot.\n\n";
 }
 else
