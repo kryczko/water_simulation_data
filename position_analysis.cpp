@@ -43,19 +43,16 @@ bool ohdecision(double ox1, double oy1, double oz1, double ox2, double oy2, doub
                         double oodistance = sqrt (dxoo*dxoo + dyoo*dyoo + dzoo*dzoo ); 
                         double ohdistance = sqrt ( dxoh*dxoh + dyoh*dyoh + dzoh*dzoh );
                         double angle = acos ( inner_prod / (oodistance*ohdistance) ) * 57.2957795;
+			
 
-                        if ( ohdistance > 1.15 && ohdistance < 2.4 )
+                        if (ohdistance > 0. && ohdistance < 2.4 && angle < 30.0 )
                         {
                                 ohtruth = true;
                         }
-                        if (angle >= 0.0 && angle < 30.0)
-                        {
-                                angletruth = true;
-                        }
-                        finaltruth = ohtruth + angletruth;
+                       
                 }
         }
-        return finaltruth;
+        return ohtruth;
 }
 
 
@@ -429,12 +426,25 @@ if (hbonds == 'y')
 					nhbs += ohdecision(oxyz[oindex][1], oxyz[oindex][2], oxyz[oindex][3], oxyz[hindex][1], oxyz[hindex][2], oxyz[hindex][3], hx, hy, hz, h_indices, lattice);
 				}
 			}
-		hbonds_outputfile << nhbs << endl;
+			if (nhlist[oindex][3] == 0 && nhlist[oindex][4] == 0)
+                                        {
+                                                nhbs += 2;
+                                        }
+                                        if (nhlist[oindex][3] != 0 && nhlist[oindex][4] == 0)
+                                        {
+                                                nhbs += 3;
+                                        }
+                                        if (nhlist[oindex][4] != 0)
+                                        {
+                                                nhbs += 4;
+                                        }
+
+		sum += nhbs;
 //		int bin_number = oxyz[oindex][3]*10;
 //		bin[bin_number] = nhbs;
 		}	
         }	
-	
+	cout << sum / (3000*64) << endl;
 //	for (int i = 0; i < 130; i ++)
 //	{
 //		hbonds_outputfile << i << "\t" << bin[i] << endl;
