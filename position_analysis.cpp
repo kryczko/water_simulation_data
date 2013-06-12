@@ -17,6 +17,49 @@ int pbc_round(double input)
 return i;
 }
 
+bool ohdecision(double ox1, double oy1, double oz1, double ox2, double oy2, double oz2, double hx[], double hy[], double hz[], int h_indices[], double lattice)
+{
+        bool ohtruth(false), angletruth(false), finaltruth;
+        for (int i = 0; i < 3; i ++)
+        {
+                if (h_indices[i] != 0)
+                {       
+                        double dxoh = ox1 - hx[h_indices[i]];
+                        double dyoh = oy1 - hy[h_indices[i]];
+                        double dzoh = oz1 - hz[h_indices[i]];
+        
+                        double dxoo = ox1 - ox2;
+                        double dyoo = oy1 - oy2;
+                        double dzoo = oz1 - oz2;                                
+        
+                        dxoh -= lattice*pbc_round(dxoh/lattice);
+                        dyoh -= lattice*pbc_round(dyoh/lattice);
+                        dzoh -= lattice*pbc_round(dzoh/lattice);
+                        dxoo -= lattice*pbc_round(dxoo/lattice);
+                        dyoo -= lattice*pbc_round(dyoo/lattice);
+                        dzoo -= lattice*pbc_round(dzoo/lattice);
+
+                        double inner_prod = dxoh*dxoo + dyoh*dyoo + dzoh*dzoo;
+                        double oodistance = sqrt (dxoo*dxoo + dyoo*dyoo + dzoo*dzoo ); 
+                        double ohdistance = sqrt ( dxoh*dxoh + dyoh*dyoh + dzoh*dzoh );
+                        double angle = acos ( inner_prod / (oodistance*ohdistance) ) * 57.2957795;
+
+                        if ( ohdistance > 1.15 && ohdistance < 2.4 )
+                        {
+                                ohtruth = true;
+                        }
+                        if (angle >= 0.0 && angle < 30.0)
+                        {
+                                angletruth = true;
+                        }
+                        finaltruth = ohtruth + angletruth;
+                }
+        }
+        return finaltruth;
+}
+
+
+
 double min_distance(double array[], int length)
 {
 double min = array[0];
@@ -296,18 +339,19 @@ if (hbonds == 'y')
 {
 	hbonds_outputfile.open("hbonds_histogram.dat");
 	
-	double ox[number_of_atoms/3], oy[number_of_atoms/3], oz[number_of_atoms/3], hx[2*number_of_atoms/3], hy[2*number_of_atoms/3], hz[2*number_of_atoms/3];
-	double ohdifference[2*number_of_atoms*number_of_atoms/9], oodifference[number_of_atoms*number_of_atoms/9], nhlist[number_of_atoms/3][5], nolist[number_of_atoms/3][5];
-	double dxo, dyo, dzo, dxh1, dxh2, dyh1, dyh2, dzh1, dzh2;
-		
+	double oxyz[number_of_atoms/3][4], hx[2*number_of_atoms/3], hy[2*number_of_atoms/3], hz[2*number_of_atoms/3];
+	double ohdifference[2*number_of_atoms*number_of_atoms/9], oodifference[number_of_atoms*number_of_atoms/9], nhlist[number_of_atoms/3][5], nolist[number_of_atoms/3][5], bin[130];
+	double dxo, dyo, dzo, dxh1, dxh2, dyh1, dyh2, dzh1, dzh2, nhbs = 0, sum = 0;
+	int bin_number;	
 
 	for (int i = 0; i < timesteps; i ++)
         {
                 for (int j = 0; j < number_of_atoms/3; j ++)
                 {
-                        ox[j] = lattice*x[j + i*number_of_atoms];
-                        oy[j] = lattice*y[j + i*number_of_atoms];
-                        oz[j] = lattice*z[j + i*number_of_atoms];
+                        oxyz[j][0] = j;
+			oxyz[j][1] = lattice*x[j + i*number_of_atoms];
+                        oxyz[j][2] = lattice*y[j + i*number_of_atoms];
+                        oxyz[j][3] = lattice*z[j + i*number_of_atoms];
                 }
 
 		 for (int k = 0; k < 2*number_of_atoms/3; k ++)
@@ -322,12 +366,12 @@ if (hbonds == 'y')
 			for (int g = 0; g < 2*number_of_atoms/3; g ++)
 			{
 		
-				dxh1 = ox[u] - hx[2*g];
-				dxh2 = ox[u] - hx[2*g + 1];
-				dyh1 = oy[u] - hy[2*g];
-				dyh2 = oy[u] - hy[2*g + 1];
-				dzh1 = oz[u] - hz[2*g];
-				dzh2 = oz[u] - hz[2*g + 1];
+				dxh1 = oxyz[u][1] - hx[2*g];
+				dxh2 = oxyz[u][1] - hx[2*g + 1];
+				dyh1 = oxyz[u][2] - hy[2*g];
+				dyh2 = oxyz[u][2] - hy[2*g + 1];
+				dzh1 = oxyz[u][3] - hz[2*g];
+				dzh2 = oxyz[u][3] - hz[2*g + 1];
 
 				dxh1 -= lattice*pbc_round(dxh1/lattice);
 				dxh2 -= lattice*pbc_round(dxh2/lattice);
@@ -349,9 +393,9 @@ if (hbonds == 'y')
 
 			for (int w = 0; w < 2*number_of_atoms/3; w ++)
 			{
-				if (ohdifference[w + q*2*number_of_atoms/3] < 1.2)
+				if (ohdifference[w + q*2*number_of_atoms/3] < 1.15)
 				{	
-					nhlist[q][d] = w + q*2*number_of_atoms/3;
+					nhlist[q][d] = w ;
 					d ++;
 				}
 			}
@@ -361,9 +405,9 @@ if (hbonds == 'y')
 		{
 			for (int m = 0; m < number_of_atoms/3; m ++)
 			{
-				dxo = ox[p] - ox[m];
-				dyo = ox[p] - ox[m];
-				dzo = ox[p] - ox[m];					
+				dxo = oxyz[p][1] - oxyz[m][1];
+				dyo = oxyz[p][2] - oxyz[m][2];
+				dzo = oxyz[p][3] - oxyz[m][3];					
 				
 				dxo -= lattice*pbc_round(dxo/lattice);
                                 dyo -= lattice*pbc_round(dyo/lattice);
@@ -372,19 +416,30 @@ if (hbonds == 'y')
 				oodifference[m + p*number_of_atoms/3] = sqrt ( dxo*dxo + dyo*dyo + dzo*dzo );
 			}
 		}
-
-		for (int p = 0; p < number_of_atoms/3 ; p ++)
+		
+		for (int oindex = 0; oindex < number_of_atoms/3 ; oindex ++)
 		{
-			for (int m = 0; m < number_of_atoms/3; m ++)
+			nhbs = 0;
+			for (int hindex = 0; hindex < number_of_atoms/3; hindex ++)
 			{
-				if (oodifference[m + p*number_of_atoms/3] > 0.0 && oodifference[m + p*number_of_atoms/3] < 3.6)
+				if (oodifference[hindex + oindex*number_of_atoms/3] > 0.0 && oodifference[hindex + oindex*number_of_atoms/3] < 3.6)
 				{
-					hbondo_distance = 
+					int h_indices[4] = { nhlist[hindex][1], nhlist[hindex][2], nhlist[hindex][3], nhlist[hindex][4] };
+					
+					nhbs += ohdecision(oxyz[oindex][1], oxyz[oindex][2], oxyz[oindex][3], oxyz[hindex][1], oxyz[hindex][2], oxyz[hindex][3], hx, hy, hz, h_indices, lattice);
 				}
 			}
-		
-		}
+		hbonds_outputfile << nhbs << endl;
+//		int bin_number = oxyz[oindex][3]*10;
+//		bin[bin_number] = nhbs;
+		}	
         }	
+	
+//	for (int i = 0; i < 130; i ++)
+//	{
+//		hbonds_outputfile << i << "\t" << bin[i] << endl;
+//		hbonds_outputfile << i + 1 << "\t" << bin[i] << endl;
+//	}
 	
 	cout << "\n\nYour H-bond histogram data has been placed in \"hbonds_histogram.dat\" and can now easily be plotted with gnuplot.\n\n";
 }
