@@ -17,7 +17,7 @@ int pbc_round(double input)
 return i;
 }
 
-bool ohdecision(double ox1, double oy1, double oz1, double ox2, double oy2, double oz2, double hx[], double hy[], double hz[], int h_indices[], double lattice)
+/*bool ohdecision(double ox1, double oy1, double oz1, double ox2, double oy2, double oz2, double hx[], double hy[], double hz[], int h_indices[], double lattice)
 {
         bool ohtruth(false), angletruth(false), finaltruth;
         for (int i = 0; i < 3; i ++)
@@ -53,7 +53,7 @@ bool ohdecision(double ox1, double oy1, double oz1, double ox2, double oy2, doub
                 }
         }
         return ohtruth;
-}
+}*/
 
 
 
@@ -75,9 +75,9 @@ int main()
 {
 // file streams
 ifstream inputfile;
-ofstream oo_outputfile, oh_outputfile, angle_outputfile, hbonds_outputfile;
+ofstream oo_outputfile, oh_outputfile, angle_outputfile, hbonds_outputfile, rmsd_outputfile;
 
-char oodistance, ohdistance, angle, hbonds; 
+char oodistance, ohdistance, angle, hbonds, rmsd; 
 string infile;
 int timesteps, number_of_atoms;
 double lattice;
@@ -90,8 +90,10 @@ cout << "If you would like to create a histogram of probability with respect to 
 cin >> ohdistance;
 cout << "If you would like to create a histogram of probability with respect to the H-O-H angle enter \"y\", if not enter \"n\": ";
 cin >> angle;
-cout << "If you would like to create a histogram of the number of H-bonds with respect to the z-axis enter \"y\", if not enter \"n\": ";
-cin >> hbonds;
+cout << "If you would like to create a plot of the rms displacement with respect to time enter \"y\", if not enter \"n\": ";
+cin >> rmsd;
+//cout << "If you would like to create a histogram of the number of H-bonds with respect to the z-axis enter \"y\", if not enter \"n\": ";
+//cin >> hbonds;
 cout << "Please enter the filename of your file: ";
 cin >> infile;
 cout << "Please enter the number of atoms: ";
@@ -332,7 +334,61 @@ else
         cout << "\n\nYou either entered the wrong key or you do not want to plot the H-O-H angle.\n\n";
 }
 
-if (hbonds == 'y')
+if (rmsd == 'y')
+{
+	rmsd_outputfile.open("rmsd.dat");
+
+	int nooa = number_of_atoms/3;
+	double oxyz[nooa*timesteps][3], distance[nooa*(timesteps - 1)], rmsdistance[timesteps - 1], sum[timesteps -1];
+
+	for (int i = 0; i < timesteps; i ++)
+	{
+		for (int j = 0; j < nooa; j ++)
+		{
+			oxyz[j + i*nooa][0] = lattice*x[j + i*number_of_atoms];
+                        oxyz[j + i*nooa][1] = lattice*y[j + i*number_of_atoms];
+                        oxyz[j + i*nooa][2] = lattice*z[j + i*number_of_atoms];
+                }
+	}
+	
+ 	for (int i = 0; i < timesteps - 1; i ++)
+	{
+		for (int j = 0; j < nooa; j ++)
+		{
+			double dx = oxyz[j + (i+1)*nooa][0] - oxyz[j + i*nooa][0];
+			double dy = oxyz[j + (i+1)*nooa][1] - oxyz[j + i*nooa][1];
+			double dz = oxyz[j + (i+1)*nooa][2] - oxyz[j + i*nooa][2];
+			
+			dx -= lattice*pbc_round(dx/lattice);
+                        dy -= lattice*pbc_round(dy/lattice);
+                        dz -= lattice*pbc_round(dz/lattice);
+			
+			distance[j + i*nooa] = sqrt( dx*dx + dy*dy + dz*dz );
+		}
+	}
+	for (int i = 0; i < timesteps - 1; i ++)
+	{
+		double add(0);	
+		for (int j = 0; j < nooa; j ++)
+		{
+			add += distance[j + i*nooa];
+			
+		}
+		sum[i] = add;
+	}
+	for (int i = 0; i < timesteps - 1; i ++)
+	{
+		rmsdistance[i] = sqrt(((sum[i]*sum[i])/nooa));
+		rmsd_outputfile << rmsdistance[i] << endl;
+	}
+
+cout << "\n\nYour rms displacement data has been placed in \"rmsd.dat\" and can now be easily plotted with gnuplot.\n\n";
+}
+else
+{
+cout << "\n\nYou either entered the wrong key or you do not want to plot the rms displacement.\n\n";
+}
+/*if (hbonds == 'y')
 {
 	hbonds_outputfile.open("hbonds_histogram.dat");
 	
@@ -444,7 +500,7 @@ if (hbonds == 'y')
 //		bin[bin_number] = nhbs;
 		}	
         }	
-	cout << sum / (3000*64) << endl;
+	cout << sum  << endl;
 //	for (int i = 0; i < 130; i ++)
 //	{
 //		hbonds_outputfile << i << "\t" << bin[i] << endl;
@@ -457,7 +513,7 @@ else
 {
 	cout << "\n\nYou either entered the wrong key or you do not want to plot the H-bond histogram.\n\n";
 }
-
+*/
 
 
 
@@ -467,6 +523,6 @@ oo_outputfile.close();
 oh_outputfile.close();
 angle_outputfile.close();
 hbonds_outputfile.close();
-
+rmsd_outputfile.close();
 return 0;
 }
