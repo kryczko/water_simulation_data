@@ -339,7 +339,7 @@ if (rmsd == 'y')
 	rmsd_outputfile.open("rmsd.dat");
 
 	int nooa = number_of_atoms/3;
-	double oxyz[nooa*timesteps][3], distance[nooa*(timesteps - 1)], rmsdistance[timesteps - 1], sum[timesteps -1];
+	double oxyz[nooa*timesteps][3], distance[nooa*(timesteps - 1)], rmsdistance[timesteps - 1], sum[timesteps -1], com[nooa*(timesteps - 1)];
 
 	for (int i = 0; i < timesteps; i ++)
 	{
@@ -351,27 +351,56 @@ if (rmsd == 'y')
                 }
 	}
 	
- 	for (int i = 0; i < timesteps - 1; i ++)
+ 	for (int i = 1; i < timesteps; i ++)
 	{
 		for (int j = 0; j < nooa; j ++)
 		{
-			double dx = oxyz[j + (i+1)*nooa][0] - oxyz[j + i*nooa][0];
-			double dy = oxyz[j + (i+1)*nooa][1] - oxyz[j + i*nooa][1];
-			double dz = oxyz[j + (i+1)*nooa][2] - oxyz[j + i*nooa][2];
+			double dx = oxyz[j + i*nooa][0] - oxyz[j][0];
+			double dy = oxyz[j + i*nooa][1] - oxyz[j][1];
+			double dz = oxyz[j + i*nooa][2] - oxyz[j][2];
 			
 			dx -= lattice*pbc_round(dx/lattice);
                         dy -= lattice*pbc_round(dy/lattice);
                         dz -= lattice*pbc_round(dz/lattice);
-			
-			distance[j + i*nooa] = sqrt( dx*dx + dy*dy + dz*dz );
+
+			distance[j + i*(nooa - 1)] = sqrt( dx*dx + dy*dy + dz*dz );
 		}
 	}
+
+	for (int i = 1; i < timesteps; i ++)
+        {
+                for (int j = 0; j < nooa; j ++)
+                {
+                        double dx1 = oxyz[j + i*nooa][0] - oxyz[j][0];
+                        double dy1 = oxyz[j + i*nooa][1] - oxyz[j][1];
+                        double dz1 = oxyz[j + i*nooa][2] - oxyz[j][2];
+
+                        double dx2 = oxyz[j + 1 + i*nooa][0] - oxyz[j][0];
+                        double dy2 = oxyz[j + 1 + i*nooa][1] - oxyz[j][1];
+                        double dz2 = oxyz[j + 1 + i*nooa][2] - oxyz[j][2];
+
+                        dx1 -= lattice*pbc_round(dx1/lattice);
+                        dy1 -= lattice*pbc_round(dy1/lattice);
+                        dz1 -= lattice*pbc_round(dz1/lattice);
+                        dx2 -= lattice*pbc_round(dx2/lattice);
+                        dy2 -= lattice*pbc_round(dy2/lattice);
+                        dz2 -= lattice*pbc_round(dz2/lattice);
+
+			double dx = (dx2 - dx1)/2;
+			double dy = (dy2 - dy1)/2;
+			double dz = (dz2 - dz1)/2;
+	
+                        com[j + i*(nooa - 1)] = sqrt( dx*dx + dy*dy + dz*dz );
+                }
+        }
+	
+
 	for (int i = 0; i < timesteps - 1; i ++)
 	{
 		double add(0);	
 		for (int j = 0; j < nooa; j ++)
 		{
-			add += distance[j + i*nooa];
+			add += distance[j + i*nooa] - com[j + i*nooa];
 			
 		}
 		sum[i] = add;
