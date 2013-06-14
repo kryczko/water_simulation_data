@@ -27,7 +27,6 @@ ofstream output;
 input.open(infile.c_str());
 output.open("coords.xyz");
 
-output << number_of_atoms << "\n\n";
 
 double x[number_of_atoms*timesteps], y[number_of_atoms*timesteps], z[number_of_atoms*timesteps];
 int counter = 0;
@@ -64,6 +63,10 @@ while (!input.eof())
         }
 	for (int i = 0; i < timesteps*nooa; i ++)
 	{
+		if (i % nooa == 0)
+		{
+			output << number_of_atoms << "\n\n";
+		}
 		output << "O" << "\t" << oxyz[i][0] << "\t" << oxyz[i][1] << "\t" << oxyz[i][2] << endl;
 		output << "H" << "\t" << hxyz[2*i][0] << "\t" << hxyz[2*i][1] << "\t" << hxyz[2*i][2] << endl;
 		output << "H" << "\t" << hxyz[2*i + 1][0] << "\t" << hxyz[2*i + 1][1] << "\t" << hxyz[2*i + 1][2] << endl;		
