@@ -61,11 +61,14 @@ while (!input.eof())
                         hxyz[j + i*noha][2] = lattice*z[nooa + j + i*number_of_atoms];
                 }
         }
+int count = 1;
 	for (int i = 0; i < timesteps*nooa; i ++)
 	{
 		if (i % nooa == 0)
 		{
-			output << number_of_atoms << "\n\n";
+			output << number_of_atoms << "\n";
+			output << count << endl;
+			count ++;
 		}
 		output << "O" << "\t" << oxyz[i][0] << "\t" << oxyz[i][1] << "\t" << oxyz[i][2] << endl;
 		output << "H" << "\t" << hxyz[2*i][0] << "\t" << hxyz[2*i][1] << "\t" << hxyz[2*i][2] << endl;
