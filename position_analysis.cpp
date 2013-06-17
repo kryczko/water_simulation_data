@@ -90,7 +90,7 @@ cout << "If you would like to create a histogram of probability with respect to 
 cin >> ohdistance;
 cout << "If you would like to create a histogram of probability with respect to the H-O-H angle enter \"y\", if not enter \"n\": ";
 cin >> angle;
-cout << "If you would like to create a plot of the rms displacement with respect to time enter \"y\", if not enter \"n\": ";
+cout << "If you would like to create a plot of the mean squared displacement with respect to time enter \"y\", if not enter \"n\": ";
 cin >> rmsd;
 //cout << "If you would like to create a histogram of the number of H-bonds with respect to the z-axis enter \"y\", if not enter \"n\": ";
 //cin >> hbonds;
@@ -178,8 +178,8 @@ if (oodistance == 'y')
 	oo_outputfile << "# The average is " << sum/n << "\n\n";
 	for(int i = 0; i < 100; i ++)
 	{
-		oo_outputfile << i << "\t" << bin[i]/126000 << endl;
-		oo_outputfile << i + 1 << "\t" << bin[i]/126000 << endl;
+		oo_outputfile << i/10. << "\t" << bin[i]/126000 << endl;
+		oo_outputfile << (i + 1)/10. << "\t" << bin[i]/126000 << endl;
 	}
 	cout << "\n\nYour O-O histogram data has been placed in \"oo_histogram.dat\" and can now be easily plotted with gnuplot.\n\n"; 
 }
@@ -250,8 +250,8 @@ if (ohdistance == 'y')
 	oh_outputfile << "# The average is " << sum/n << "\n\n";
 	for (int j = 0; j < 200; j ++)
 	{
-		oh_outputfile << j << "\t" << bin[j]/256000. << endl;
-		oh_outputfile << j + 1 << "\t" << bin[j]/256000. << endl;
+		oh_outputfile << j/100. << "\t" << bin[j]/256000. << endl;
+		oh_outputfile << (j + 1)/100. << "\t" << bin[j]/256000. << endl;
 	}
         cout << "\n\nYour O-H distance histogram data has been placed in \"oh_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
 }
@@ -323,8 +323,8 @@ if (angle == 'y')
 	angle_outputfile << "# The average is " << sum/n << "\n\n";
 	for (int j = 0; j < 20000; j ++)
 	{
-		angle_outputfile << j << "\t" << bin[j]/128000. << endl;
-		angle_outputfile << (j + 1) << "\t" << bin[j]/128000. << endl;
+		angle_outputfile << j/100. << "\t" << bin[j]/128000. << endl;
+		angle_outputfile << (j + 1)/100. << "\t" << bin[j]/128000. << endl;
 	}
 
         cout << "\n\nYour H-O-H angle histogram data has been placed in \"angle_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
@@ -336,10 +336,10 @@ else
 
 if (rmsd == 'y')
 {
-	rmsd_outputfile.open("rmsd.dat");
+	rmsd_outputfile.open("msd.dat");
 
 	int nooa = number_of_atoms/3;
-	double oxyz[nooa*timesteps][3], distance[nooa*(timesteps - 1)], rmsdistance[timesteps - 1], sum[timesteps -1], com[nooa*(timesteps - 1)];
+	double oxyz[nooa*timesteps][3], distance[nooa*(timesteps - 1)], rmsdistance[timesteps - 1], sum[timesteps -1], COM[timesteps][3];
 
 	for (int i = 0; i < timesteps; i ++)
 	{
@@ -351,67 +351,65 @@ if (rmsd == 'y')
                 }
 	}
 	
+	for(int i = 0; i < timesteps; i ++)
+	{
+		double dx(0), dy(0), dz(0);
+		for (int j = 0; j < nooa; j ++)
+		{
+			dx += oxyz[j + i*nooa][0];
+			dy += oxyz[j + i*nooa][1];
+			dz += oxyz[j + i*nooa][2];
+		}
+		
+		dx /= nooa;
+		dy /= nooa;
+		dz /= nooa;
+	
+		COM[i][0] = dx;
+		COM[i][1] = dy;
+		COM[i][2] = dz;
+	}
+
+	
  	for (int i = 1; i < timesteps; i ++)
 	{
 		for (int j = 0; j < nooa; j ++)
 		{
-			double dx = oxyz[j + i*nooa][0] - oxyz[j][0];
-			double dy = oxyz[j + i*nooa][1] - oxyz[j][1];
-			double dz = oxyz[j + i*nooa][2] - oxyz[j][2];
+			double dx1 = oxyz[j][0] - COM[0][0];
+			double dy1 = oxyz[j][1] - COM[0][1];
+			double dz1 = oxyz[j][2] - COM[0][2];			
+			double dx2 = oxyz[j + i*nooa][0] - COM[i][0];
+			double dy2 = oxyz[j + i*nooa][1] - COM[i][1];
+			double dz2 = oxyz[j + i*nooa][2] - COM[i][2];
 			
-			dx -= lattice*pbc_round(dx/lattice);
-                        dy -= lattice*pbc_round(dy/lattice);
-                        dz -= lattice*pbc_round(dz/lattice);
+			double dxa = dx2 - dx1;
+			double dya = dy2 - dy1;
+			double dza = dz2 - dz1;
+			
+			dxa -= lattice*pbc_round(dxa/lattice);
+                        dya -= lattice*pbc_round(dya/lattice);
+                        dza -= lattice*pbc_round(dza/lattice);
 
-			distance[j + i*(nooa - 1)] = sqrt( dx*dx + dy*dy + dz*dz );
+			distance[j + (i-1)*nooa] = dxa*dxa + dya*dya + dza*dza ;
 		}
 	}
-
-	for (int i = 1; i < timesteps; i ++)
-        {
-                for (int j = 0; j < nooa; j ++)
-                {
-                        double dx1 = oxyz[j + i*nooa][0] - oxyz[j][0];
-                        double dy1 = oxyz[j + i*nooa][1] - oxyz[j][1];
-                        double dz1 = oxyz[j + i*nooa][2] - oxyz[j][2];
-
-                        double dx2 = oxyz[j + 1 + i*nooa][0] - oxyz[j][0];
-                        double dy2 = oxyz[j + 1 + i*nooa][1] - oxyz[j][1];
-                        double dz2 = oxyz[j + 1 + i*nooa][2] - oxyz[j][2];
-
-                        dx1 -= lattice*pbc_round(dx1/lattice);
-                        dy1 -= lattice*pbc_round(dy1/lattice);
-                        dz1 -= lattice*pbc_round(dz1/lattice);
-                        dx2 -= lattice*pbc_round(dx2/lattice);
-                        dy2 -= lattice*pbc_round(dy2/lattice);
-                        dz2 -= lattice*pbc_round(dz2/lattice);
-
-			double dx = (dx2 - dx1)/2;
-			double dy = (dy2 - dy1)/2;
-			double dz = (dz2 - dz1)/2;
-	
-                        com[j + i*(nooa - 1)] = sqrt( dx*dx + dy*dy + dz*dz );
-                }
-        }
-	
-
+		
 	for (int i = 0; i < timesteps - 1; i ++)
 	{
 		double add(0);	
 		for (int j = 0; j < nooa; j ++)
 		{
-			add += distance[j + i*nooa] - com[j + i*nooa];
+			add += distance[j + i*nooa];
 			
 		}
-		sum[i] = add;
+		sum[i] = add/nooa;
 	}
 	for (int i = 0; i < timesteps - 1; i ++)
 	{
-		rmsdistance[i] = sqrt(((sum[i]*sum[i])/nooa));
-		rmsd_outputfile << rmsdistance[i] << endl;
-	}
+		rmsd_outputfile <<  sum[i] << endl;
+	} 
 
-cout << "\n\nYour rms displacement data has been placed in \"rmsd.dat\" and can now be easily plotted with gnuplot.\n\n";
+cout << "\n\nYour rms displacement data has been placed in \"msd.dat\" and can now be easily plotted with gnuplot.\n\n";
 }
 else
 {
