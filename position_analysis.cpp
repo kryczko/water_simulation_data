@@ -334,12 +334,14 @@ else
         cout << "\n\nYou either entered the wrong key or you do not want to plot the H-O-H angle.\n\n";
 }
 
+//COMPUTES THE MEAN SQUARE DISTANCE OF THE WATER MOLECULES
+
 if (rmsd == 'y')
 {
 	rmsd_outputfile.open("msd.dat");
 
 	int nooa = number_of_atoms/3;
-	double oxyz[nooa*timesteps][3], distance[nooa*(timesteps - 1)], rmsdistance[timesteps - 1], sum[timesteps -1], COM[timesteps][3];
+	double oxyz[nooa*timesteps][3], distance[nooa*timesteps], rmsdistance[timesteps], sum[timesteps], COM[timesteps][3];
 
 	for (int i = 0; i < timesteps; i ++)
 	{
@@ -369,32 +371,34 @@ if (rmsd == 'y')
 		COM[i][1] = dy;
 		COM[i][2] = dz;
 	}
-
 	
- 	for (int i = 1; i < timesteps; i ++)
+	for (int i = 0; i < timesteps; i ++)
+	{	
+		for (int j = 0; j < nooa; j ++)
+		{
+			oxyz[j + i*nooa][0] -= COM[i][0];
+			oxyz[j + i*nooa][1] -= COM[i][1];
+			oxyz[j + i*nooa][2] -= COM[i][2];
+	
+//			oxyz[j + i*nooa][0] -= lattice*pbc_round(oxyz[j + i*nooa][0]/lattice);
+  //                      oxyz[j + i*nooa][1] -= lattice*pbc_round(oxyz[j + i*nooa][1]/lattice);
+    //                    oxyz[j + i*nooa][2] -= lattice*pbc_round(oxyz[j + i*nooa][2]/lattice);
+		}
+	}
+	
+ 	for (int i = 0; i < timesteps; i ++)
 	{
 		for (int j = 0; j < nooa; j ++)
 		{
-			double dx1 = oxyz[j][0] - COM[0][0];
-			double dy1 = oxyz[j][1] - COM[0][1];
-			double dz1 = oxyz[j][2] - COM[0][2];			
-			double dx2 = oxyz[j + i*nooa][0] - COM[i][0];
-			double dy2 = oxyz[j + i*nooa][1] - COM[i][1];
-			double dz2 = oxyz[j + i*nooa][2] - COM[i][2];
+			double dxa = oxyz[j + i*nooa][0] - oxyz[0][0];
+			double dya = oxyz[j + i*nooa][1] - oxyz[0][1];
+			double dza = oxyz[j + i*nooa][2] - oxyz[0][2];
 			
-			double dxa = dx2 - dx1;
-			double dya = dy2 - dy1;
-			double dza = dz2 - dz1;
-			
-			dxa -= lattice*pbc_round(dxa/lattice);
-                        dya -= lattice*pbc_round(dya/lattice);
-                        dza -= lattice*pbc_round(dza/lattice);
-
-			distance[j + (i-1)*nooa] = dxa*dxa + dya*dya + dza*dza ;
+			distance[j + i*nooa] = dxa*dxa + dya*dya + dza*dza ;
 		}
 	}
 		
-	for (int i = 0; i < timesteps - 1; i ++)
+	for (int i = 0; i < timesteps; i ++)
 	{
 		double add(0);	
 		for (int j = 0; j < nooa; j ++)
@@ -404,7 +408,7 @@ if (rmsd == 'y')
 		}
 		sum[i] = add/nooa;
 	}
-	for (int i = 0; i < timesteps - 1; i ++)
+	for (int i = 0; i < timesteps; i ++)
 	{
 		rmsd_outputfile <<  sum[i] << endl;
 	} 
