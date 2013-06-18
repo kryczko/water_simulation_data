@@ -37,13 +37,15 @@ ifstream inputfile;
 ofstream rmsd_outputfile;
 
 string infile;
-int timesteps, number_of_atoms;
+int timesteps, nooa, noha;
 double lattice;
 
 cout << "Please enter the filename of your file: ";
 cin >> infile;
-cout << "Please enter the number of atoms: ";
-cin >> number_of_atoms;
+cout << "Please enter the number of oxygen atoms: ";
+cin >> nooa;
+cout << "Please enter the number of hydrogen atoms: ";
+cin >> noha;
 cout << "Please enter the number of timesteps: ";
 cin >> timesteps;
 cout << "Please enter the lattice constant for your periodic cube: ";
@@ -51,6 +53,8 @@ cin >> lattice;
 cout << "Program running...please wait a moment.\n\n";
 
 inputfile.open(infile.c_str());
+
+int number_of_atoms = nooa + noha;
 
 double xyz[number_of_atoms*timesteps][3];
 int counter = 0;
@@ -69,33 +73,35 @@ while (!inputfile.eof())
 
         for(int i = 0; i < timesteps; i ++)
         {
-                double dx(0), dy(0), dz(0);
-                for (int j = 0; j < noa; j ++)
+                double dxo(0), dyo(0), dzo(0), dxh(0), dyh(0), dzh(0);
+                for (int j = 0; j < nooa; j ++)
                 {
-                        dx += xyz[j + i*noa][0];
-                        dy += xyz[j + i*noa][1];
-                        dz += xyz[j + i*noa][2];
+                        dxo += lattice*xyz[j + i*noa][0];
+                        dyo += lattice*xyz[j + i*noa][1];
+                        dzo += lattice*xyz[j + i*noa][2];
                 }
+		for (int k = 0; k < noha; k ++)
+		{
+			dxh += lattice*xyz[k + i*noa + nooa][0];
+			dyh += lattice*xyz[k + i*noa + nooa][1];
+			dzh += lattice*xyz[k + i*noa + nooa][2];
+		}
 
-                dx /= noa;
-                dy /= noa;
-                dz /= noa;
-
-                COM[i][0] = dx;
-                COM[i][1] = dy;
-                COM[i][2] = dz;
+                COM[i][0] = (8*dxo + dxh)/(8*nooa + noha);
+                COM[i][1] = (8*dyo + dyh)/(8*nooa + noha);
+                COM[i][2] = (8*dzo + dzh)/(8*nooa + noha);
         }
 
         for (int i = 1; i < timesteps; i ++)
         {
                 for (int j = 0; j < noa; j ++)
                 {
-                        double dx1 = xyz[j][0] - COM[0][0];
-			double dy1 = xyz[j][1] - COM[0][1];
-			double dz1 = xyz[j][2] - COM[0][2];
-			double dx2 = xyz[j + i*noa][0] - COM[i][0];
-			double dy2 = xyz[j + i*noa][1] - COM[i][1];
-			double dz2 = xyz[j + i*noa][2] - COM[i][2];			
+                        double dx1 = lattice*xyz[j][0] - COM[0][0];
+			double dy1 = lattice*xyz[j][1] - COM[0][1];
+			double dz1 = lattice*xyz[j][2] - COM[0][2];
+			double dx2 = lattice*xyz[j + i*noa][0] - COM[i][0];
+			double dy2 = lattice*xyz[j + i*noa][1] - COM[i][1];
+			double dz2 = lattice*xyz[j + i*noa][2] - COM[i][2];			
 			
 			double dxa = dx2 - dx1;
 			double dya = dy2 - dy1;
@@ -114,6 +120,7 @@ while (!inputfile.eof())
                 }
                 sum[i] = add/noa;
         }
+	
         for (int i = 0; i < timesteps - 1; i ++)
         {
                 rmsd_outputfile <<  sum[i] << endl;

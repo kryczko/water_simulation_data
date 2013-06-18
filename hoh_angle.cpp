@@ -38,13 +38,15 @@ ifstream inputfile;
 ofstream angle_outputfile;
 
 string infile;
-int timesteps, number_of_atoms;
+int timesteps, nooa, noha;
 double lattice;
 
 cout << "Please enter the filename of your file: ";
 cin >> infile;
-cout << "Please enter the number of atoms: ";
-cin >> number_of_atoms;
+cout << "Please enter the number of oxygen atoms: ";
+cin >> nooa;
+cout << "Please enter the number of hydrogen atoms: ";
+cin >> noha;
 cout << "Please enter the number of timesteps: ";
 cin >> timesteps;
 cout << "Please enter the lattice constant for your periodic cube: ";
@@ -52,6 +54,8 @@ cin >> lattice;
 cout << "Program running...please wait a moment.\n\n";
 
 inputfile.open(infile.c_str());
+
+int number_of_atoms = nooa + noha;
 
 double x[number_of_atoms*timesteps], y[number_of_atoms*timesteps], z[number_of_atoms*timesteps];
 int counter = 0;
@@ -66,25 +70,25 @@ while (!inputfile.eof())
 
 angle_outputfile.open("angle_histogram.dat");
 
-	double ox[number_of_atoms/3], oy[number_of_atoms/3], oz[number_of_atoms/3], hx[2*number_of_atoms/3], hy[2*number_of_atoms/3], hz[2*number_of_atoms/3];
-	double dx1, dx2, dy1, dy2, dz1, dz2, dot[number_of_atoms/3], distance[2*number_of_atoms/3], angle[number_of_atoms/3*timesteps], bin[20000] = {};
+	double ox[nooa], oy[nooa], oz[nooa], hx[noha], hy[noha], hz[noha];
+	double dx1, dx2, dy1, dy2, dz1, dz2, dot[nooa], distance[noha], angle[nooa*timesteps], bin[20000] = {};
 	int bin_number;
 
 	for (int i = 0; i < timesteps; i ++)
 	{
-		 for (int j = 0; j < number_of_atoms/3; j ++)
+		 for (int j = 0; j < nooa; j ++)
                 {
                         ox[j] = lattice*x[j + i*number_of_atoms];
                         oy[j] = lattice*y[j + i*number_of_atoms];
                         oz[j] = lattice*z[j + i*number_of_atoms];
                 }
-                for (int k = 0; k < 2*number_of_atoms/3; k ++)
+                for (int k = 0; k < noha; k ++)
                 {
-                        hx[k] = lattice*x[number_of_atoms/3 + k + i*number_of_atoms];
-                        hy[k] = lattice*y[number_of_atoms/3 + k + i*number_of_atoms];
-                        hz[k] = lattice*z[number_of_atoms/3 + k + i*number_of_atoms];
+                        hx[k] = lattice*x[nooa + k + i*number_of_atoms];
+                        hy[k] = lattice*y[nooa + k + i*number_of_atoms];
+                        hz[k] = lattice*z[nooa + k + i*number_of_atoms];
                 }
-                for (int n = 0; n < number_of_atoms/3; n ++)
+                for (int n = 0; n < nooa; n ++)
                 {
                         dx1 = ox[n] - hx[2*n];
                         dx2 = ox[n] - hx[2*n + 1];
@@ -106,15 +110,15 @@ angle_outputfile.open("angle_histogram.dat");
                         distance[2*n] = sqrt( dx1*dx1 + dy1*dy1 + dz1*dz1 );
                         distance[2*n + 1] = sqrt ( dx2*dx2 + dy2*dy2 + dz2*dz2 );
                 }
-                for (int g = 0; g < number_of_atoms/3; g ++)
+                for (int g = 0; g < nooa; g ++)
                 {
-                        angle[g + i*number_of_atoms/3] = acos( dot[g]/(distance[2*g]*distance[2*g + 1]) ) * 57.2957795;
+                        angle[g + i*nooa] = acos( dot[g]/(distance[2*g]*distance[2*g + 1]) ) * 57.2957795;
                 }
 
 	}
 	double sum(0);
 	int n(0);
-	for (int i = 0; i < number_of_atoms/3*timesteps; i ++)
+	for (int i = 0; i < nooa*timesteps; i ++)
 	{
 		bin_number = angle[i]*100;
 		bin[bin_number] += 1;
