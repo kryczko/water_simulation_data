@@ -52,86 +52,69 @@ cout << "Program running...please wait a moment.\n\n";
 
 inputfile.open(infile.c_str());
 
-double x[number_of_atoms*timesteps], y[number_of_atoms*timesteps], z[number_of_atoms*timesteps];
+double xyz[number_of_atoms*timesteps][3];
 int counter = 0;
 
 while (!inputfile.eof())
 {
-        inputfile >> x[counter] >> y[counter] >> z[counter];
+        inputfile >> xyz[counter][0] >> xyz[counter][1] >> xyz[counter][2];
         counter ++;
 
 }
 
  rmsd_outputfile.open("msd.dat");
 
-        int nooa = number_of_atoms/3;
-        double oxyz[nooa*timesteps][3], distance[nooa*timesteps], rmsdistance[timesteps], sum[timesteps], COM[timesteps][3];
-
-        for (int i = 0; i < timesteps; i ++)
-        {
-                for (int j = 0; j < nooa; j ++)
-                {
-                        oxyz[j + i*nooa][0] = lattice*x[j + i*number_of_atoms];
-                        oxyz[j + i*nooa][1] = lattice*y[j + i*number_of_atoms];
-                        oxyz[j + i*nooa][2] = lattice*z[j + i*number_of_atoms];
-                }
-        }
+        int noa = number_of_atoms;
+        double distance[noa*(timesteps - 1)], rmsdistance[timesteps - 1], sum[timesteps - 1], COM[timesteps][3];
 
         for(int i = 0; i < timesteps; i ++)
         {
                 double dx(0), dy(0), dz(0);
-                for (int j = 0; j < nooa; j ++)
+                for (int j = 0; j < noa; j ++)
                 {
-                        dx += oxyz[j + i*nooa][0];
-                        dy += oxyz[j + i*nooa][1];
-                        dz += oxyz[j + i*nooa][2];
+                        dx += xyz[j + i*noa][0];
+                        dy += xyz[j + i*noa][1];
+                        dz += xyz[j + i*noa][2];
                 }
 
-                dx /= nooa;
-                dy /= nooa;
-                dz /= nooa;
+                dx /= noa;
+                dy /= noa;
+                dz /= noa;
 
                 COM[i][0] = dx;
                 COM[i][1] = dy;
                 COM[i][2] = dz;
         }
 
-        for (int i = 0; i < timesteps; i ++)
+        for (int i = 1; i < timesteps; i ++)
         {
-                for (int j = 0; j < nooa; j ++)
+                for (int j = 0; j < noa; j ++)
                 {
-                        oxyz[j + i*nooa][0] -= COM[i][0];
-                        oxyz[j + i*nooa][1] -= COM[i][1];
-                        oxyz[j + i*nooa][2] -= COM[i][2];
+                        double dx1 = xyz[j][0] - COM[0][0];
+			double dy1 = xyz[j][1] - COM[0][1];
+			double dz1 = xyz[j][2] - COM[0][2];
+			double dx2 = xyz[j + i*noa][0] - COM[i][0];
+			double dy2 = xyz[j + i*noa][1] - COM[i][1];
+			double dz2 = xyz[j + i*noa][2] - COM[i][2];			
+			
+			double dxa = dx2 - dx1;
+			double dya = dy2 - dy1;
+			double dza = dz2 - dz1;
 
-                        oxyz[j + i*nooa][0] -= lattice*pbc_round(oxyz[j + i*nooa][0]/lattice);
-                        oxyz[j + i*nooa][1] -= lattice*pbc_round(oxyz[j + i*nooa][1]/lattice);
-                        oxyz[j + i*nooa][2] -= lattice*pbc_round(oxyz[j + i*nooa][2]/lattice);
+                        distance[j + (i-1)*noa] = dxa*dxa + dya*dya + dza*dza ;
                 }
         }
-
-        for (int i = 0; i < timesteps; i ++)
-        {
-                for (int j = 0; j < nooa; j ++)
-                {
-                        double dxa = oxyz[j + i*nooa][0] - oxyz[0][0];
-                        double dya = oxyz[j + i*nooa][1] - oxyz[0][1];
-                        double dza = oxyz[j + i*nooa][2] - oxyz[0][2];
-
-                        distance[j + i*nooa] = dxa*dxa + dya*dya + dza*dza ;
-                }
-        }
-	 for (int i = 0; i < timesteps; i ++)
+	 for (int i = 0; i < timesteps - 1; i ++)
         {
                 double add(0);
-                for (int j = 0; j < nooa; j ++)
+                for (int j = 0; j < noa; j ++)
                 {
-                        add += distance[j + i*nooa];
+                        add += distance[j + i*noa];
 
                 }
-                sum[i] = add/nooa;
+                sum[i] = add/noa;
         }
-        for (int i = 0; i < timesteps; i ++)
+        for (int i = 0; i < timesteps - 1; i ++)
         {
                 rmsd_outputfile <<  sum[i] << endl;
         }
