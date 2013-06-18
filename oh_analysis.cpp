@@ -67,7 +67,7 @@ while (!inputfile.eof())
 oh_outputfile.open("oh_histogram.dat");
 
         double ox[nooa], oy[nooa], oz[nooa], hx[noha], hy[noha], hz[noha];
-        double dx1, dx2, dy1, dy2, dz1, dz2, distance[noha], final_distance[noha*timesteps], bin[200]={}  ;
+        double dx1, dx2, dy1, dy2, dz1, dz2, distance[noha], final_distance[noha*timesteps], bin[300]={}  ;
         int bin_number;
 
         for (int i = 0; i < timesteps; i ++)
@@ -104,7 +104,7 @@ oh_outputfile.open("oh_histogram.dat");
                         distance[2*n] = sqrt( dx1*dx1 + dy1*dy1 + dz1*dz1 );
                         distance[2*n + 1] = sqrt ( dx2*dx2 + dy2*dy2 + dz2*dz2 );
                 }
-                for (int g = 0; g < noha; g ++)
+               for (int g = 0; g < noha; g ++)
                 {
                         final_distance[g + i*noha] = distance[g];
                 }
@@ -114,7 +114,6 @@ oh_outputfile.open("oh_histogram.dat");
         int n(0);
         for (int i = 0; i < noha*timesteps; i ++)
         {
-
                 bin_number = final_distance[i]*100;
                 bin[bin_number] += 1;
                 sum += final_distance[i];
@@ -122,7 +121,7 @@ oh_outputfile.open("oh_histogram.dat");
         }
         oh_outputfile << "# The average is " << sum/n << "\n\n";
 
-for (int j = 0; j < 200; j ++)
+        for (int j = 0; j < 300; j ++)
         {
                 oh_outputfile << j/100. << "\t" << bin[j]/256000. << endl;
                 oh_outputfile << (j + 1)/100. << "\t" << bin[j]/256000. << endl;
