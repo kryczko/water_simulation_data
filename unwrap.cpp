@@ -5,6 +5,7 @@
 
 using namespace std;
 
+
 int main()
 {
 
@@ -37,35 +38,34 @@ while (!inputfile.eof())
         counter ++;
 
 }
-double xyzdistance[number_of_atoms*(timesteps - 1)][3];
+double dx[number_of_atoms*timesteps], dy[number_of_atoms*timesteps], dz[number_of_atoms*timesteps]; 
+
+
 
 for (int i = 1; i < timesteps; i ++)
 {
 	for (int j = 0; j < number_of_atoms; j ++)
 	{
-		double dx = abs(x[j + i*number_of_atoms] - x[j + (i - 1)*number_of_atoms]);
-		double dy = abs(y[j + i*number_of_atoms] - y[j + (i - 1)*number_of_atoms]);
-		double dz = abs(z[j + i*number_of_atoms] - z[j + (i - 1)*number_of_atoms]);
+		dx[j] = 0;
+		dy[j] = 0;
+		dz[j] = 0;
 
-		if (dx > 0.5)
-		{
-			x[j + i*number_of_atoms] = 1.0 - x[j + i*number_of_atoms];
-		}
+		double dRx = x[j + i*number_of_atoms] - x[j + (i - 1)*number_of_atoms];
+		double dRy = y[j + i*number_of_atoms] - y[j + (i - 1)*number_of_atoms];
+		double dRz = z[j + i*number_of_atoms] - z[j + (i - 1)*number_of_atoms];
 
-		if (dy > 0.5)
-                {
-                        y[j + i*number_of_atoms] = 1.0 - y[j + i*number_of_atoms];
-                }
+		dx[j + i*number_of_atoms] = dx[j + (i - 1)*number_of_atoms] + (dRx - round(dRx));
+		dy[j + i*number_of_atoms] = dy[j + (i - 1)*number_of_atoms] + (dRy - round(dRy));
+		dz[j + i*number_of_atoms] = dz[j + (i - 1)*number_of_atoms] + (dRz - round(dRz));
 
-		if (dz > 0.5)
-                {
-                        z[j + i*number_of_atoms] = 1.0 - z[j + i*number_of_atoms];
-                }
+		x[j + i*number_of_atoms] = x[j] + dx[j + i*number_of_atoms];
+		y[j + i*number_of_atoms] = y[j] + dy[j + i*number_of_atoms];
+		z[j + i*number_of_atoms] = z[j] + dz[j + i*number_of_atoms];
 
 	}
 }
 
-outputfile.open("newcoords.dat");
+outputfile.open("unwrapped.dat");
 
 for (int i = 0; i < number_of_atoms*timesteps; i ++)
 {
