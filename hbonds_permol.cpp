@@ -74,6 +74,16 @@ while (!inputfile.eof())
 double oxyz[nooa][3], hxyz[noha][3];
 int ohindices[nooa][4];
 
+for (int i = 0; i < nooa; i ++)
+{
+	for (int j = 0; j < 3; j ++)
+	{
+		ohindices[i][j] = -1;
+	}
+}
+
+vector <double> everything;
+
 hbonds_outputfile.open("hbonds_histogram.dat");
 
 for (int i = 0; i < timesteps; i ++)
@@ -142,7 +152,7 @@ for (int i = 0; i < timesteps; i ++)
 		{
 			for (int l = 0; l < 4; l ++)
 			{
-				if (ohindices[k][l] !=0 && ohindices[k][0] != ohindices[k][l])
+				if (ohindices[k][l] != -1 && ohindices[k][0] != ohindices[k][l])
 				{
 					double hdx = oxyz[j][0] - hxyz[ohindices[k][l]][0];
 					double hdy = oxyz[j][1] - hxyz[ohindices[k][l]][1];
@@ -151,16 +161,19 @@ for (int i = 0; i < timesteps; i ++)
 					double ohdist = sqrt ( hdx*hdx + hdy*hdy + hdz*hdz );
 					double dot = ( hdx*oox[k] + hdy*ooy[k] + hdz*ooz[k] ) / (oodistances[k]*ohdist);
 					double angle = acos(dot) * 57.2957795; 
-					if ( ohdist > 1.1 && ohdist < 2.4 && angle < 30.0)
+					if ( ohdist < 2.4 && angle < 30.0)
 					{		
-					hbonds_outputfile << k << endl;
+						everything.push_back(ohdist);
 					}
 				}
 			}
 		}
 	}
 }
-
+for (int i = 0; i < everything.size(); i ++)
+{
+	hbonds_outputfile << everything[i] << endl;
+}
 inputfile.close();
 hbonds_outputfile.close();
 
