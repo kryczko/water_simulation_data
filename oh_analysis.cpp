@@ -68,8 +68,8 @@ while (!inputfile.eof())
 
 oh_outputfile.open("oh_histogram.dat");
 
-double oxyz[nooa][3], hxyz[noha][3];
-int ohindices[nooa][4];
+double oxyz[nooa][3], hxyz[noha][3], bin[200] = {};
+int ohindices[nooa][4]; 
 vector <double> ohdistance;
 
 for (int i = 0; i < nooa; i ++)
@@ -121,7 +121,14 @@ for (int i = 0; i < timesteps; i ++)
 
 for (int i = 0; i < ohdistance.size(); i ++)
 {
-	oh_outputfile << ohdistance[i] << endl;
+	int bin_num = ohdistance[i]*100;
+	bin[bin_num] ++;
+}
+
+for (int i = 0; i < 200; i ++)
+{
+	oh_outputfile << i/100. << "\t" << bin[i]/(timesteps*noha) << endl;
+	oh_outputfile << (i+1)/100. << "\t" << bin[i]/(timesteps*noha) << endl;
 }
 
 cout << "\n\nYour O-H distance histogram data has been placed in \"oh_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
