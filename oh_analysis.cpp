@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <vector>
 
 using namespace std;
 
@@ -15,6 +16,7 @@ int pbc_round(double input)
                 if (input < 0) {i -= 1;}
         }
 return i;
+
 }
 
 double min_distance(double array[], int length)
@@ -66,70 +68,83 @@ while (!inputfile.eof())
 
 oh_outputfile.open("oh_histogram.dat");
 
-        double ox[nooa], oy[nooa], oz[nooa], hx[noha], hy[noha], hz[noha];
-        double dx1, dx2, dy1, dy2, dz1, dz2, distance[noha], final_distance[noha*timesteps], bin[300]={}  ;
-        int bin_number;
+double oxyz[nooa][3], hxyz[noha][3];
+int ohindices[nooa][4];
+vector <double> ohdistance;
 
-        for (int i = 0; i < timesteps; i ++)
+for (int i = 0; i < nooa; i ++)
+{
+	for (int y = 0; y < 4; y ++)
+	{
+		ohindices[i][y] = -1;
+	}
+}
+
+
+for (int i = 0; i < timesteps; i ++)
+{
+	for (int j = 0; j < nooa; j ++)
         {
-                 for (int j = 0; j < nooa; j ++)
-                {
-                        ox[j] = lattice*x[j + i*(nooa + noha)];
-                        oy[j] = lattice*y[j + i*(nooa + noha)];
-                        oz[j] = lattice*z[j + i*(nooa + noha)];
-                }
-                for (int k = 0; k < noha; k ++)
-                {
-                        hx[k] = lattice*x[nooa + k + i*(nooa + noha)];
-                        hy[k] = lattice*y[nooa + k + i*(nooa + noha)];
-                        hz[k] = lattice*z[nooa + k + i*(nooa + noha)];
-                }
-                for (int n = 0; n < nooa; n ++)
-                {
-                        dx1 = ox[n] - hx[2*n];
-                        dx2 = ox[n] - hx[2*n + 1];
-                        dy1 = oy[n] - hy[2*n];
-                        dy2 = oy[n] - hy[2*n + 1];
-                        dz1 = oz[n] - hz[2*n];
-                        dz2 = oz[n] - hz[2*n + 1];
+	        oxyz[j][0] = lattice*x[j + i*(nooa + noha)];
+                oxyz[j][1] = lattice*y[j + i*(nooa + noha)];
+                oxyz[j][2] = lattice*z[j + i*(nooa + noha)];
+       	}
 
-                        dx1 -= lattice*pbc_round(dx1/lattice);
-                        dy1 -= lattice*pbc_round(dy1/lattice);
-                        dz1 -= lattice*pbc_round(dz1/lattice);
+	for (int j = 0; j < noha; j ++)
+	{
+		hxyz[j][0] = lattice*x[nooa + j + i*(nooa + noha)];
+		hxyz[j][1] = lattice*y[nooa + j + i*(nooa + noha)];
+		hxyz[j][2] = lattice*z[nooa + j + i*(nooa + noha)];
+	}
 
-                        dx2 -= lattice*pbc_round(dx2/lattice);
-                        dy2 -= lattice*pbc_round(dy2/lattice);
-                        dz2 -= lattice*pbc_round(dz2/lattice);
+	for (int j = 0; j < nooa; j ++)
+	{
+		for (int k = 0; k < noha; k ++)
+		{
+			double dx = oxyz[j][0] - hxyz[k][0];
+			double dy = oxyz[j][1] - hxyz[k][1];
+			double dz = oxyz[j][2] - hxyz[k][2];
+		
+			dx -= lattice*pbc_round(dx/lattice);
+			dy -= lattice*pbc_round(dy/lattice);
+			dz -= lattice*pbc_round(dz/lattice);
 
-                        distance[2*n] = sqrt( dx1*dx1 + dy1*dy1 + dz1*dz1 );
-                        distance[2*n + 1] = sqrt ( dx2*dx2 + dy2*dy2 + dz2*dz2 );
-                }
-               for (int g = 0; g < noha; g ++)
-                {
-                        final_distance[g + i*noha] = distance[g];
-                }
+			double distance = sqrt(dx*dx + dy*dy + dz*dz); 
+			
+			if (distance <= 1.1)
+			{	
+				ohdistance.push_back (distance);
+			}
+		}
+	}
+}
 
-        }
-        double sum(0);
-        int n(0);
-        for (int i = 0; i < noha*timesteps; i ++)
-        {
-                bin_number = final_distance[i]*100;
-                bin[bin_number] += 1;
-                sum += final_distance[i];
-                n ++;
-        }
-        oh_outputfile << "# The average is " << sum/n << "\n\n";
+for (int i = 0; i < ohdistance.size(); i ++)
+{
+	oh_outputfile << ohdistance[i] << endl;
+}
 
-        for (int j = 0; j < 300; j ++)
-        {
-                oh_outputfile << j/100. << "\t" << bin[j]/256000. << endl;
-                oh_outputfile << (j + 1)/100. << "\t" << bin[j]/256000. << endl;
-        }
-        cout << "\n\nYour O-H distance histogram data has been placed in \"oh_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
+cout << "\n\nYour O-H distance histogram data has been placed in \"oh_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
 
 inputfile.close();
 oh_outputfile.close();
 return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
