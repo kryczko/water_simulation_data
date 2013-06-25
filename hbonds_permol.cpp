@@ -128,14 +128,12 @@ for (int i = 0; i < timesteps; i ++)
 	for (int j = 0; j < nooa; j ++)
 	{
 		int count = 0;
-		vector <int> ooindex;
-		vector <double> oodistances, oox, ooy, ooz;
 
 		for (int k = 0; k < nooa; k ++)
 		{
-			double odx = oxyz[k][0] - oxyz[j][0];
-			double ody = oxyz[k][1] - oxyz[j][1];
-			double odz = oxyz[k][2] - oxyz[j][2];
+			double odx = oxyz[j][0] - oxyz[k][0];
+			double ody = oxyz[j][1] - oxyz[k][1];
+			double odz = oxyz[j][2] - oxyz[k][2];
 
 			odx -= lattice*pbc_round(odx/lattice);
                         ody -= lattice*pbc_round(ody/lattice);
@@ -145,68 +143,58 @@ for (int i = 0; i < timesteps; i ++)
 			double oodist = sqrt (odx*odx + ody*ody + odz*odz );
 
 			if (oodist > 0.0 && oodist < 3.6)
-			{	
-				oox.push_back(odx);
-				ooy.push_back(ody);
-				ooz.push_back(odz);
-				oodistances.push_back(oodist);
-				ooindex.push_back(k);
-			}
-		
-		}
-		
-		for (int k = 0; k < ooindex.size(); k ++)
-		{
-			for (int n = 0; n < 4; n ++)
 			{
-				if (n == 0)
+				for (int n = 0; n < 4; n ++)
 				{
-					if ( ohindices[k][0] != -1 )
+					if ( n == 0)
 					{
-						double dx = oxyz[j][0] - hxyz[ohindices[k][0]][0];
-						double dy = oxyz[j][1] - hxyz[ohindices[k][0]][1];
-						double dz = oxyz[j][2] - hxyz[ohindices[k][0]][2];	
-						
-						dx -= lattice*pbc_round(dx/lattice);
-                        			dy -= lattice*pbc_round(dy/lattice);
-			                        dz -= lattice*pbc_round(dz/lattice);
-
-
-						double hdist = sqrt( dx*dx + dy*dy + dz*dz );
-						double dot = dx*oox[k] + dy*ooy[k] + dz*ooz[k];
-						double angle = acos (dot / (hdist*oodistances[k])) * 57.2957795;
-					
-						if (hdist  < 2.4 )
-						{
-							count ++;
-						} 				
-					}
-				}
-				if (n != 0)
-				{
-					if( ohindices[k][n] != -1 && ohindices[k][n] != ohindices[k][n - 1] )
+					if (ohindices[k][n] != -1)
 					{
-						double dx = oxyz[j][0] - hxyz[ohindices[k][0]][0];
-                                                double dy = oxyz[j][1] - hxyz[ohindices[k][0]][1];
-                                                double dz = oxyz[j][2] - hxyz[ohindices[k][0]][2];
+					double hdx = oxyz[j][0] - hxyz[ohindices[k][n]][0];
+					double hdy = oxyz[j][1] - hxyz[ohindices[k][n]][1];
+					double hdz = oxyz[j][2] - hxyz[ohindices[k][n]][2];
 				
-						dx -= lattice*pbc_round(dx/lattice);
-                                                dy -= lattice*pbc_round(dy/lattice);
-                                                dz -= lattice*pbc_round(dz/lattice);
+					hdx -= lattice*pbc_round(hdx/lattice);
+                        		hdy -= lattice*pbc_round(hdy/lattice);
+                        		hdz -= lattice*pbc_round(hdz/lattice);
 
-						double hdist = sqrt( dx*dx + dy*dy + dz*dz );
-                                                double dot = dx*oox[k] + dy*ooy[k] + dz*ooz[k];
-                                                double angle = acos (dot / (hdist*oodistances[k])) * 57.2957795;                         
-                                                if (  hdist < 2.4 )
-                                                {
-                                                        count ++;
-                                                }
+					double hdist = sqrt( hdx*hdx + hdy*hdy + hdz*hdz );
+					double dot = odx*hdx + ody*hdy + odz*hdz;
+					double angle = acos (dot / (oodist*hdist)) * 57.2957795;
+					if (angle < 30.0 && hdist < 2.4)
+					{
+						count ++;
+					}
 
 					}
-				}
+					}
+					if (n > 0)
+                                        {
+                                        if (ohindices[k][n] != -1 && ohindices[k][n] != ohindices[k][n-1])
+                                        {
+                                        double hdx = oxyz[j][0] - hxyz[ohindices[k][n]][0];
+                                        double hdy = oxyz[j][1] - hxyz[ohindices[k][n]][1];
+                                        double hdz = oxyz[j][2] - hxyz[ohindices[k][n]][2];
+
+                                        hdx -= lattice*pbc_round(hdx/lattice);
+                                        hdy -= lattice*pbc_round(hdy/lattice);
+                                        hdz -= lattice*pbc_round(hdz/lattice);
+
+                                        double hdist = sqrt( hdx*hdx + hdy*hdy + hdz*hdz );
+                                        double dot = odx*hdx + ody*hdy + odz*hdz;
+                                        double angle = acos (dot / (oodist*hdist)) * 57.2957795;
+                                        if (angle < 30.0 && hdist < 2.4)
+                                        {
+                                                count ++;
+                                        }
+
+                                        }
+                                        }
+
+				}	
 			}
 		}
-	hcount[i] += count;		
+	hcount[j] += count;	
 	}
 }
 for (int i = 0; i < nooa; i ++)
