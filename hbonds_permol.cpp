@@ -137,6 +137,11 @@ for (int i = 0; i < timesteps; i ++)
 			double ody = oxyz[k][1] - oxyz[j][1];
 			double odz = oxyz[k][2] - oxyz[j][2];
 
+			odx -= lattice*pbc_round(odx/lattice);
+                        ody -= lattice*pbc_round(ody/lattice);
+                        odz -= lattice*pbc_round(odz/lattice);
+
+
 			double oodist = sqrt (odx*odx + ody*ody + odz*odz );
 
 			if (oodist > 0.0 && oodist < 3.6)
@@ -162,11 +167,16 @@ for (int i = 0; i < timesteps; i ++)
 						double dy = oxyz[j][1] - hxyz[ohindices[k][0]][1];
 						double dz = oxyz[j][2] - hxyz[ohindices[k][0]][2];	
 						
+						dx -= lattice*pbc_round(dx/lattice);
+                        			dy -= lattice*pbc_round(dy/lattice);
+			                        dz -= lattice*pbc_round(dz/lattice);
+
+
 						double hdist = sqrt( dx*dx + dy*dy + dz*dz );
 						double dot = dx*oox[k] + dy*ooy[k] + dz*ooz[k];
 						double angle = acos (dot / (hdist*oodistances[k])) * 57.2957795;
 					
-						if ( hdist < 2.4 && angle < 30.0 )
+						if (hdist  < 2.4 )
 						{
 							count ++;
 						} 				
@@ -174,16 +184,20 @@ for (int i = 0; i < timesteps; i ++)
 				}
 				if (n != 0)
 				{
-					if( ohindices[k][n] != ohindices[k][n - 1] )
+					if( ohindices[k][n] != -1 && ohindices[k][n] != ohindices[k][n - 1] )
 					{
 						double dx = oxyz[j][0] - hxyz[ohindices[k][0]][0];
                                                 double dy = oxyz[j][1] - hxyz[ohindices[k][0]][1];
                                                 double dz = oxyz[j][2] - hxyz[ohindices[k][0]][2];
 				
+						dx -= lattice*pbc_round(dx/lattice);
+                                                dy -= lattice*pbc_round(dy/lattice);
+                                                dz -= lattice*pbc_round(dz/lattice);
+
 						double hdist = sqrt( dx*dx + dy*dy + dz*dz );
                                                 double dot = dx*oox[k] + dy*ooy[k] + dz*ooz[k];
                                                 double angle = acos (dot / (hdist*oodistances[k])) * 57.2957795;                         
-                                                if ( hdist < 2.4 && angle < 30.0 )
+                                                if (  hdist < 2.4 )
                                                 {
                                                         count ++;
                                                 }
