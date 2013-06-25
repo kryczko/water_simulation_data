@@ -2,18 +2,19 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <vector>
 
 using namespace std;
 
 int pbc_round(double input)
 {
-	int i  = input;
+        int i  = input;
 
-	if (abs(input - i) >= 0.5)
-	{
-		if (input > 0) {i += 1;}
-		if (input < 0) {i -= 1;}
-	}
+        if (abs(input - i) >= 0.5)
+        {
+                if (input > 0) {i += 1;}
+                if (input < 0) {i -= 1;}
+        }
 return i;
 }
 
@@ -22,10 +23,10 @@ double min_distance(double array[], int length)
 double min = array[0];
 for (int i = 1; i < length; i ++)
 {
-	if (array[i] < min && array[i] != 0)
-	{
-		min = array[i];
-	}
+        if (array[i] < min && array[i] != 0)
+        {
+                min = array[i];
+        }
 }
 return min;
 }
@@ -62,80 +63,130 @@ int counter = 0;
 
 while (!inputfile.eof())
 {
-	inputfile >> x[counter] >> y[counter] >> z[counter];	
-	counter ++;
+        inputfile >> x[counter] >> y[counter] >> z[counter];
+        counter ++;
 
 }
 
 
 angle_outputfile.open("angle_histogram.dat");
 
-	double ox[nooa], oy[nooa], oz[nooa], hx[noha], hy[noha], hz[noha];
-	double dx1, dx2, dy1, dy2, dz1, dz2, dot[nooa], distance[noha], angle[nooa*timesteps], bin[20000] = {};
-	int bin_number;
+double oxyz[nooa][3], hxyz[noha][3];
 
-	for (int i = 0; i < timesteps; i ++)
+vector <double> angles;
+
+for (int i = 0; i < timesteps; i ++)
+{
+	for (int j = 0; j < nooa; j ++)
 	{
-		 for (int j = 0; j < nooa; j ++)
-                {
-                        ox[j] = lattice*x[j + i*number_of_atoms];
-                        oy[j] = lattice*y[j + i*number_of_atoms];
-                        oz[j] = lattice*z[j + i*number_of_atoms];
-                }
-                for (int k = 0; k < noha; k ++)
-                {
-                        hx[k] = lattice*x[nooa + k + i*number_of_atoms];
-                        hy[k] = lattice*y[nooa + k + i*number_of_atoms];
-                        hz[k] = lattice*z[nooa + k + i*number_of_atoms];
-                }
-                for (int n = 0; n < nooa; n ++)
-                {
-                        dx1 = ox[n] - hx[2*n];
-                        dx2 = ox[n] - hx[2*n + 1];
-                        dy1 = oy[n] - hy[2*n];
-                        dy2 = oy[n] - hy[2*n + 1];
-                        dz1 = oz[n] - hz[2*n];
-                        dz2 = oz[n] - hz[2*n + 1];
-
-                        dx1 -= lattice*pbc_round(dx1/lattice);
-                        dy1 -= lattice*pbc_round(dy1/lattice);
-                        dz1 -= lattice*pbc_round(dz1/lattice);
-
-                        dx2 -= lattice*pbc_round(dx2/lattice);
-                        dy2 -= lattice*pbc_round(dy2/lattice);
-                        dz2 -= lattice*pbc_round(dz2/lattice);
-
-			dot[n] = dx1*dx2 + dy1*dy2 + dz1*dz2;
-
-                        distance[2*n] = sqrt( dx1*dx1 + dy1*dy1 + dz1*dz1 );
-                        distance[2*n + 1] = sqrt ( dx2*dx2 + dy2*dy2 + dz2*dz2 );
-                }
-                for (int g = 0; g < nooa; g ++)
-                {
-                        angle[g + i*nooa] = acos( dot[g]/(distance[2*g]*distance[2*g + 1]) ) * 57.2957795;
-                }
-
+		oxyz[j][0] = lattice*x[j + i*number_of_atoms];
+		oxyz[j][1] = lattice*y[j + i*number_of_atoms];
+		oxyz[j][2] = lattice*z[j + i*number_of_atoms];
 	}
-	double sum(0);
-	int n(0);
-	for (int i = 0; i < nooa*timesteps; i ++)
+	
+	for (int j = 0; j < noha; j ++)
 	{
-		bin_number = angle[i]*100;
-		bin[bin_number] += 1;
-		sum += angle[i];
-		n ++;
+		hxyz[j][0] = lattice*x[nooa + j + i*number_of_atoms];
+		hxyz[j][1] = lattice*y[nooa + j + i*number_of_atoms];
+		hxyz[j][2] = lattice*z[nooa + j + i*number_of_atoms];
 	}
-	angle_outputfile << "# The average is " << sum/n << "\n\n";
-	for (int j = 0; j < 20000; j ++)
+		
+	for (int j = 0; j < nooa; j ++)
 	{
-		angle_outputfile << j/100. << "\t" << bin[j]/128000. << endl;
-		angle_outputfile << (j + 1)/100. << "\t" << bin[j]/128000. << endl;
-	}
+		int count = 0;
+		vector <int> ohindex;
+		for (int k = 0; k < noha; k ++)
+		{
+			double dx = oxyz[j][0] - hxyz[k][0];
+                        double dy = oxyz[j][1] - hxyz[k][1];
+                        double dz = oxyz[j][2] - hxyz[k][2];
 
-        cout << "\n\nYour H-O-H angle histogram data has been placed in \"angle_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
+                        dx -= lattice*pbc_round(dx/lattice);
+                        dy -= lattice*pbc_round(dy/lattice);
+                        dz -= lattice*pbc_round(dz/lattice);
+
+                        double distance = sqrt(dx*dx + dy*dy + dz*dz);
+
+			if (distance <= 1.1)
+			{
+				ohindex.push_back(k);
+				count ++;
+			}
+		}
+			if (count == 2)
+			{
+				double dx1 = oxyz[j][0] - hxyz[ohindex[0]][0];
+				double dx2 = oxyz[j][0] - hxyz[ohindex[1]][0];
+				double dy1 = oxyz[j][1] - hxyz[ohindex[0]][1];
+                                double dy2 = oxyz[j][1] - hxyz[ohindex[1]][1];
+				double dz1 = oxyz[j][2] - hxyz[ohindex[0]][2];
+                                double dz2 = oxyz[j][2] - hxyz[ohindex[1]][2];
+
+				dx1 -= lattice*pbc_round(dx1/lattice);
+                        	dy1 -= lattice*pbc_round(dy1/lattice);
+                        	dz1 -= lattice*pbc_round(dz1/lattice);
+				dx2 -= lattice*pbc_round(dx2/lattice);
+                        	dy2 -= lattice*pbc_round(dy2/lattice);
+                        	dz2 -= lattice*pbc_round(dz2/lattice);
+	
+				double dot = dx1*dx2 + dy1*dy2 + dz1*dz2;
+				double dist1 = sqrt( dx1*dx1 + dy1*dy1 + dz1*dz1 );
+				double dist2 = sqrt( dx2*dx2 + dy2*dy2 + dz2*dz2 ); 
+				
+				double angle = acos ( dot / (dist1*dist2) ) * 57.2957795;
+				angles.push_back(angle);
+			}
+		
+	}		
+}
+double bin[2000] = {};
+
+for (int i = 0; i < angles.size(); i ++)
+{
+	int bin_num = angles[i]*10.;
+	bin[bin_num] ++;
+}
+for (int i = 0; i < 2000; i ++)
+{
+	angle_outputfile << i/10. << "\t" << bin[i]/(nooa*timesteps) << endl;
+	angle_outputfile << (i + 1)/10. << "\t" << bin[i]/(nooa*timesteps) << endl;
+}
+
+
+       cout << "\n\nYour H-O-H angle histogram data has been placed in \"angle_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
 
 inputfile.close();
 angle_outputfile.close();
 
 return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
