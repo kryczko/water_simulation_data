@@ -201,10 +201,7 @@ double sum(0);
 for (int i = 0; i < nooa; i ++)
 {
 	double hcount2 = hcount[i]/timesteps;
-	if (hcount2 > 4.0)
-	{
-		hcount2 = int (hcount2);
-	}
+
 	sum += hcount2;
 	hbonds_outputfile << hcount2  << endl;
 }
