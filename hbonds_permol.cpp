@@ -3,6 +3,7 @@
 #include <string>
 #include <cmath>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -85,7 +86,7 @@ for (int i = 0; i < nooa; i ++)
 vector <double> everything;
 double hcount[nooa];
 hbonds_outputfile.open("hbonds_histogram.dat");
-
+double xcoords[nooa], zcoords[nooa], ycoords[nooa];
 for (int i = 0; i < timesteps; i ++)
 {
 	for (int j = 0; j < nooa; j ++)
@@ -194,18 +195,36 @@ for (int i = 0; i < timesteps; i ++)
 				}	
 			}
 		}
-	hcount[j] += count;	
+	hcount[j] += count;
+	xcoords[j] += oxyz[j][0];	
+	zcoords[j] += oxyz[j][2];
+	ycoords[j] += oxyz[j][1];
 	}
 }
+double print[nooa][2];
+
 double sum(0);
+int hbondbin[130] = {};
+
 for (int i = 0; i < nooa; i ++)
 {
 	double hcount2 = hcount[i]/timesteps;
+	double zc = zcoords[i]/timesteps;
+	double xc = xcoords[i]/timesteps;
+	double yc = ycoords[i]/timesteps;
 
+	int bin_num = hcount2*10.;
+	hbondbin[bin_num] ++;
 	sum += hcount2;
-	hbonds_outputfile << hcount2  << endl;
+	hbonds_outputfile << xc << "\t" << yc << "\t" << zc << "\t" << hcount2 << endl;
 }
-
+/*for (int i = 0; i < 50; i ++)
+{
+	double num_of_o = nooa;
+	hbonds_outputfile << hbondbin[i]/num_of_o << zcoords[ endl;
+	hbonds_outputfile << hbondbin[i]/num_of_o << endl;
+}
+*/
 cout << "The average number of H-bonds/molecule is " << sum/nooa << endl;
 inputfile.close();
 hbonds_outputfile.close();
