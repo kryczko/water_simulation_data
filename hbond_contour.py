@@ -37,8 +37,15 @@ zi = np.linspace(0., 12.42, 100)
 
 hbi = griddata (ylist, zlist, hblist, yi, zi)
 
+CS = plt.contour(yi,zi,hbi,15,linewidths=0.5,colors='k')
+CS = plt.contourf(yi,zi,hbi,15,cmap=plt.cm.rainbow)
+plt.colorbar()
 
-plot = plt.contour(yi,zi,hbi)
-plt.clabel(plot, inline=1, fontsize=10)
+
+plt.title('Number of hydrogen bonds per molecule wrt y and z axis')
+plt.xlabel('y-axis [Angstroms]')
+plt.ylabel('z-axis [Angstroms]')
+
+#plt.clabel(CS, inline=1, fontsize=10)
 plt.show()
 
