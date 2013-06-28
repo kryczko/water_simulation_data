@@ -121,12 +121,14 @@ for (int i = 0; i < timesteps; i ++)
 		
 	}
 }
-
+double sum = 0;
 for (int i = 0; i < ohdistance.size(); i ++)
 {
+	sum += ohdistance[i];	
 	int bin_num = ohdistance[i]*100;
 	distbin[bin_num] ++;
 }
+cout << "The average is " << sum/(noha*timesteps) << " angstroms." << endl;
 for (int i = 0; i < nooa; i ++)
 {
 	double fix = timesteps;

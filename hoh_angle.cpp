@@ -140,12 +140,14 @@ for (int i = 0; i < timesteps; i ++)
 	}		
 }
 double bin[2000] = {};
-
+double sum = 0;
 for (int i = 0; i < angles.size(); i ++)
 {
+	sum += angles[i];
 	int bin_num = angles[i]*10.;
 	bin[bin_num] ++;
 }
+cout << "The average is " << sum/(nooa*timesteps) << " degrees." << endl;
 for (int i = 0; i < 2000; i ++)
 {
 	angle_outputfile << i/10. << "\t" << bin[i]/(nooa*timesteps) << endl;
