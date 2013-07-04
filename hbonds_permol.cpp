@@ -204,20 +204,21 @@ for (int i = 0; i < timesteps; i ++)
 double print[nooa][2];
 
 double sum(0);
-int hbondbin[130] = {};
-
+double hbondbin[13] = {};
+int xbin[13] = {}, xcoord;
 for (int i = 0; i < nooa; i ++)
 {
 	double hcount2 = hcount[i]/timesteps;
-	double zc = zcoords[i]/timesteps;
-	double xc = xcoords[i]/timesteps;
-	double yc = ycoords[i]/timesteps;
-
-	int bin_num = hcount2*10.;
-	hbondbin[bin_num] ++;
 	sum += hcount2;
-	hbonds_outputfile << xc << "\t" << yc << "\t" << zc << "\t" << hcount2 << endl;
+	xcoord = oxyz[i][0];
+	xbin[xcoord] ++;
+	hbondbin[xcoord] += hcount2;
 }
+for (int i = 0; i < 13; i ++)
+{
+	hbonds_outputfile << i << "\t" << hbondbin[i]/xbin[i] << endl;
+	hbonds_outputfile << i+1 << "\t" << hbondbin[i]/xbin[i] << endl;
+} 
 /*for (int i = 0; i < 50; i ++)
 {
 	double num_of_o = nooa;
