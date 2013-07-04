@@ -203,8 +203,13 @@ for (int i = 0; i < timesteps; i ++)
 }
 
 double sum(0);
-double hbondbin[13]={};
-int xbin[13]={};
+double hbondbin[int(lattice)+1];
+int xbin[int(lattice)+1];
+for (int i = 0; i < int(lattice) + 1; i ++)
+{
+	xbin[i] = 0;
+	hbondbin[i] = 0;
+}
 
 for (int i = 0; i < nooa; i ++)
 {
@@ -215,7 +220,7 @@ for (int i = 0; i < nooa; i ++)
 	hbondbin[xcoord] += hcount2;
 }
 
-for (int i = 0; i < 13; i ++)
+for (int i = 0; i < int(lattice) + 1; i ++)
 {
 	hbonds_outputfile << i << "\t" << hbondbin[i]/xbin[i] << endl;
 	hbonds_outputfile << i+1 << "\t" << hbondbin[i]/xbin[i] << endl;

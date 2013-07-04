@@ -84,7 +84,7 @@ for (int i = 0; i < nooa; i ++)
 }
 
 vector <double> everything;
-hbonds_outputfile.open("hbonds_histogram.dat");
+hbonds_outputfile.open("hbonds_contour.dat");
 
 int xcoord, ycoord, xybin[13][13] = {};
 double xyhbin[13][13] = {}, hcount[nooa] ;
