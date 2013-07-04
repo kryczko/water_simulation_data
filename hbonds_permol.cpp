@@ -201,58 +201,31 @@ for (int i = 0; i < timesteps; i ++)
 	ycoords[j] += oxyz[j][1];
 	}
 }
-double print[nooa][2];
 
 double sum(0);
-double hbondbin[13] = {};
-int xbin[13] = {}, xcoord;
+double hbondbin[13]={};
+int xbin[13]={}, xcoord;
+
 for (int i = 0; i < nooa; i ++)
 {
 	double hcount2 = hcount[i]/timesteps;
 	sum += hcount2;
-	xcoord = oxyz[i][0];
+	xcoord = round(oxyz[i][0]);
 	xbin[xcoord] ++;
 	hbondbin[xcoord] += hcount2;
 }
+
 for (int i = 0; i < 13; i ++)
 {
 	hbonds_outputfile << i << "\t" << hbondbin[i]/xbin[i] << endl;
 	hbonds_outputfile << i+1 << "\t" << hbondbin[i]/xbin[i] << endl;
 } 
-/*for (int i = 0; i < 50; i ++)
-{
-	double num_of_o = nooa;
-	hbonds_outputfile << hbondbin[i]/num_of_o << zcoords[ endl;
-	hbonds_outputfile << hbondbin[i]/num_of_o << endl;
-}
-*/
+
+
 cout << "The average number of H-bonds/molecule is " << sum/nooa << endl;
 inputfile.close();
 hbonds_outputfile.close();
 
 return 0;
 } 
-		
-		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
