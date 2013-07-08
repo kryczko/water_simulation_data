@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import os, sys
+from mpl_toolkits.mplot3d import axes3d
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.mlab import griddata
-
+from matplotlib import cm
 nooa = 64
 
 f = open('hbonds_contour.dat', 'r')
@@ -36,6 +37,7 @@ xi = np.linspace(0., 12, 100)
 yi = np.linspace(0., 12, 100)
 
 hbi = griddata (xlist, ylist, hblist, xi, yi)
+
 
 CS = plt.contour(xi,yi,hbi,15,linewidths=0.5,colors='k')
 CS = plt.contourf(xi,yi,hbi,15,cmap=plt.cm.rainbow)
