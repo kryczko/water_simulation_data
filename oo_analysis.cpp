@@ -111,7 +111,7 @@ while (!inputfile.eof())
         double sum(0);
         for ( int i = 0; i < (nooa-1)*timesteps; i ++)
         {
-                if ((last_difference[i] != 0 || last_difference[i] != 0.0) && (last_difference[i] < 7.0))
+                if ((last_difference[i] != 0 || last_difference[i] != 0.0) && (last_difference[i] < 5.0))
                 {
                         bin_number = last_difference[i]*10;
                         bin[bin_number] += 1;
@@ -122,8 +122,8 @@ while (!inputfile.eof())
         oo_outputfile << "# The average is " << sum/n << "\n\n";
         for(int i = 0; i < 100; i ++)
         {
-                oo_outputfile << i/10. << "\t" << bin[i]/126000 << endl;
-                oo_outputfile << (i + 1)/10. << "\t" << bin[i]/126000 << endl;
+                oo_outputfile << i/10. << "\t" << (bin[i]/((nooa/2)*timesteps))*100 << endl;
+                oo_outputfile << (i + 1)/10. << "\t" << (bin[i]/((nooa/2)*timesteps))*100 << endl;
         }
         cout << "\n\nYour O-O histogram data has been placed in \"oo_histogram.dat\" and can now be easily plotted with gnuplot.\n\n";
 
