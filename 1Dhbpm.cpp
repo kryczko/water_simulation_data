@@ -84,11 +84,10 @@ for (int i = 0; i < nooa; i ++)
 }
 
 vector <double> everything;
-double hcount[nooa];
 hbonds_outputfile.open("hbonds_histogram.dat");
 
-int xcoord, ycoord, xybin[13][13] = {};
-double xyhbin[13][13] = {};
+int xcoord, ycoord, xybin[13] = {};
+double xyhbin[13] = {}, hcount[nooa] ;
 
 for (int i = 0; i < timesteps; i ++)
 {
@@ -97,6 +96,7 @@ for (int i = 0; i < timesteps; i ++)
 		oxyz[j][0] = lattice*x[j + i*noa];
 		oxyz[j][1] = lattice*y[j + i*noa];
 		oxyz[j][2] = lattice*z[j + i*noa];
+		hcount[j] = 0;
 	}
 	for (int j = 0; j < noha; j ++)
 	{
@@ -198,38 +198,38 @@ for (int i = 0; i < timesteps; i ++)
 				}	
 			}
 		}
-	hcount[j] += count;
-	}
+		hcount[j] += count;	
+		xcoord = round(oxyz[j][0]);
+		ycoord = round(oxyz[j][1]);
+		xybin[xcoord] ++;
+		xyhbin[xcoord] += hcount[j];
+		
+	}	
+
+
 }
 
-double sum(0);
-double hbondbin[int(lattice)+1];
-int xbin[int(lattice)+1];
-for (int i = 0; i < int(lattice) + 1; i ++)
+for (int i = 0; i < 13; i ++)
 {
-	xbin[i] = 0;
-	hbondbin[i] = 0;
+
+		if (xybin[i] != 0)
+		{
+		hbonds_outputfile << i << "\t" << xyhbin[i]/xybin[i] << endl;
+                hbonds_outputfile << i + 1 << "\t" << xyhbin[i]/xybin[i] << endl;
+
+		}
+		else
+		{
+		hbonds_outputfile << i << "\t" << xyhbin[i] << endl;
+                hbonds_outputfile << i + 1 << "\t" << xyhbin[i] << endl;
+		
+		}
+	
 }
 
-for (int i = 0; i < nooa; i ++)
-{
-	double hcount2 = hcount[i]/timesteps;
-	sum += hcount2;
-	xcoord = round(oxyz[i][0]);
-	xbin[xcoord] ++;
-	hbondbin[xcoord] += hcount2;
-}
-
-for (int i = 0; i < int(lattice) + 1; i ++)
-{
-	hbonds_outputfile << i << "\t" << hbondbin[i]/xbin[i] << endl;
-	hbonds_outputfile << i+1 << "\t" << hbondbin[i]/xbin[i] << endl;
-} 
-
-
-cout << "The average number of H-bonds/molecule is " << sum/nooa << endl;
 inputfile.close();
 hbonds_outputfile.close();
 
 return 0;
 } 
+
