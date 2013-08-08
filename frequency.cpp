@@ -30,7 +30,7 @@ int main()
 	//###########################################################################
 	// Main menu, get info from user
 	string infile, atom1, atom2;
-	double xlat, ylat, zlat, equildist, maxdist;
+	double xlat, ylat, zlat, timestep;
 	int noa1, noa2;
 	
 	cout << "XYZ file\n==> ";
@@ -41,9 +41,9 @@ int main()
 	cin >> noa1 >> noa2;
 	cout << "Lattice constants (x y z)\n==> ";
 	cin >> xlat >> ylat >> zlat;
-	cout << "Maximum bond length and equilibrium bondlength (in Angstrom)\n==> ";
-	cin >> maxdist >> equildist;
-	cout << "\n\n########## PROGRAM RUNNING, PLEASE WAIT PATIENTLY ##########\n\n"
+	cout << "Timestep (fs)\n==> ";
+	cin >> timestep;
+	cout << "\n\n########## PROGRAM RUNNING, PLEASE WAIT PATIENTLY ##########\n\n";
 	//#############################################################################
 
 	//############################################################################
@@ -79,52 +79,33 @@ int main()
 	// Go through the data obtained from the inputfile
 
 	//firstly, lets create the neighbor list array; since this is general lets say there are maybe 6 neighbors at most. 
-        int nframes = alx.size() / noa1;
+        int nframes = a1x.size() / noa1;
+	
+	//velocity array for every frame, atom2 and in the x,y, and z direction
+	double vel[nframes - 1][noa2][3];
 
-	int neighbors[noa1*nframes][6];	
-	for (int i = 0; i < noa1*nframes; i ++)
+	ofstream output;
+	output.open("freq.dat");
+
+	for (int i = 0; i < nframes - 1; i ++)
 	{
-		for (int j = 0; j < 6; j ++)
+		for (int j = 0; j < noa2; j ++)
 		{
-			neighbors[i][j] = -1
+			double dx = a2x[j + (i+1)*noa2] - a2x[j + i*noa2];
+                        double dy = a2y[j + (i+1)*noa2] - a2y[j + i*noa2];
+                        double dz = a2z[j + (i+1)*noa2] - a2z[j + i*noa2];
+
+			dx -= xlat*pbc_round(dx/xlat); 
+			dy -= ylat*pbc_round(dy/ylat);
+			dz -= zlat*pbc_round(dz/zlat);
+
+			vel[i][j][0] = dx/timestep;
+			vel[i][j][1] = dy/timestep;
+			vel[i][j][2] = dz/timestep;
 		}
-	}	
-
-	double ndist[noa1*nframes][6];
-	for (int i = 0; i < noa1*nframes; i ++)
-        {
-                for (int j = 0; j < 6; j ++)
-                {
-                        ndist[i][j] = -1
-                }
-        }
-
-
-	for (int i = 0; i < nframes; i ++)
-	{
-		for (int j = 0; j < noa1; j ++)
-		{
-			int ncount = 0;
-			for (int k = 0; k < noa2; k ++)
-			{
-				double dx = a1x[j + i*noa1] - a2x[k + i*noa2];
-                                double dy = a1y[j + i*noa1] - a2y[k + i*noa2];
-                                double dz = a1z[j + i*noa1] - a2z[k + i*noa2];
-				
-				dx -= xlat*pbc_round(dx/xlat);
-        	                dy -= ylat*pbc_round(dy/ylat);
-	                        dz -= zlat*pbc_round(dz/zlat);
-				
-				double dist = sqrt ( dx*dx + dy*dy + dz*dz );
-				//if dist less than the max bond length, then it must be a neighbor!
-				if (dist <= maxdist)
-				{
-					ndist[k +i*noa1][ncount] = dist;
-					neighbors[k + i*noa1][ncount] = k;
-					ncount ++;
-				}
-			}
-		}
-	}	 
-				
-	for (int i = 0; i < nframes
+	}
+	
+	input.close();
+	output.close();
+	return 0;
+}
