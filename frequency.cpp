@@ -7,6 +7,7 @@
 #include <vector> // for using vectors (more convienient than arrays)
 #include <cmath> // for mathematical functions like sin, sqrt, etc.
 #include <iomanip> // for printing out fixed amounts of digits
+#include <fftw3.h> // For fourier transform
 
 using namespace std;
 
@@ -83,7 +84,6 @@ int main()
 	
 	//velocity array for every frame, atom2 and in the x,y, and z direction
 	double vel[nframes - 1][noa2][3];
-
 	ofstream output;
 	output.open("freq.dat");
 
@@ -91,9 +91,9 @@ int main()
 	{
 		for (int j = 0; j < noa2; j ++)
 		{
-			double dx = a2x[j + (i+1)*noa2] - a2x[j + i*noa2];
-                        double dy = a2y[j + (i+1)*noa2] - a2y[j + i*noa2];
-                        double dz = a2z[j + (i+1)*noa2] - a2z[j + i*noa2];
+			double dx = a2x[j + (i + 1)*noa2] - a2x[j + (i)*noa2];
+                        double dy = a2y[j + (i + 1)*noa2] - a2y[j + (i)*noa2];
+                        double dz = a2z[j + (i + 1)*noa2] - a2z[j + (i)*noa2];
 
 			dx -= xlat*pbc_round(dx/xlat); 
 			dy -= ylat*pbc_round(dy/ylat);
@@ -104,6 +104,62 @@ int main()
 			vel[i][j][2] = dz/timestep;
 		}
 	}
+
+	cout << "########## COMPUTED VELOCITES FROM DATAFILE ##########\n\n";
+
+	double *Z;
+	Z = new double [nframes - 1];
+
+	for (int m = 0; m < nframes - 1; m ++)
+	{
+		for (int n = 0; n < nframes - 1 - m - 1; n ++)
+		{
+			for (int i = 0; i < noa2; i ++)
+			{
+				for (int j = 0; j < 3; j ++)
+				{
+					Z[m] += vel[n + m][i][j]*vel[n][i][j];
+				}				
+			}
+		}
+	}
+	for (int m = 0; m < nframes - 1; m ++)
+	{
+		Z[m] /= (nframes - m);
+	}
+	for (int m = 1; m < nframes - 1; m ++)
+	{
+		Z[m] /= Z[0];
+	}
+	cout << "########## COMPUTED THE VELOCITY AUTOCORRELATION FUNCTION ##########\n\n";
+	
+	int N = nframes - 1;
+	double sigma = N / 2.5;
+	
+	for (int i = 0; i < N; i ++)
+	{
+		Z[i] *= exp(-i*i / (2*sigma*sigma)) / (sigma * sqrt(2*3.14159265359));
+	}
+	for (int m = 1; m < N; m ++)
+	{
+		Z[m] /= Z[0];
+	}	
+	
+	//##############################################################
+	// fourier transform
+	fftw_complex *out;
+	out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N/2)+1);
+	fftw_plan p;
+	p = fftw_plan_dft_r2c_1d(N,Z,out,FFTW_ESTIMATE);
+	fftw_execute(p);
+	
+	cout << "########### COMPUTED FOURIER TRANSFORMS ##########\n\n";
+
+	for (int i = 0; i < (N/2)+1; i ++)
+	{
+		output << i <<"\t"<< out[i][0] << "\t" << out[i][1] << endl;	
+	}
+	cout << "######### OUTPUTTED DATA TO freq.dat ##########\n\n";
 	
 	input.close();
 	output.close();
