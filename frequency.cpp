@@ -36,10 +36,10 @@ int main()
 	
 	cout << "XYZ file\n==> ";
 	cin >> infile;
-	cout << "Atom names (e.g. O H)\n==> ";
-	cin >> atom1 >> atom2;
-	cout << "Number of each atom\n==> ";
-	cin >> noa1 >> noa2;
+	cout << "Atom name (e.g. H)\n==> ";
+	cin >> atom2;
+	cout << "Number of " << atom2 << " atoms\n==> ";
+	cin >>  noa2;
 	cout << "Lattice constants (x y z)\n==> ";
 	cin >> xlat >> ylat >> zlat;
 	cout << "Timestep (fs)\n==> ";
@@ -58,13 +58,7 @@ int main()
 	while (! input.eof())
 	{
 		input >> dummy;
-		if (dummy == atom1)
-		{
-			input >> x >> y >> z;
-			a1x.push_back(x);	
-			a1y.push_back(y);
-			a1z.push_back(z);
-		}
+
 		if (dummy == atom2)
                 {
                         input >> x >> y >> z;
@@ -80,7 +74,7 @@ int main()
 	// Go through the data obtained from the inputfile
 
 	//firstly, lets create the neighbor list array; since this is general lets say there are maybe 6 neighbors at most. 
-        int nframes = a1x.size() / noa1;
+        int nframes = a2x.size() / noa2;
 	
 	//velocity array for every frame, atom2 and in the x,y, and z direction
 	double vel[nframes - 1][noa2][3];
@@ -104,7 +98,6 @@ int main()
 			vel[i][j][2] = dz/timestep;
 		}
 	}
-
 	cout << "########## COMPUTED VELOCITES FROM DATAFILE ##########\n\n";
 
 	double *Z;
@@ -133,6 +126,9 @@ int main()
 	}
 	cout << "########## COMPUTED THE VELOCITY AUTOCORRELATION FUNCTION ##########\n\n";
 	
+	//#############################################################################
+	// pad the function with a gaussian function
+
 	int N = nframes - 1;
 	double sigma = N / 2.5;
 	
@@ -144,6 +140,7 @@ int main()
 	{
 		Z[m] /= Z[0];
 	}	
+	//#################################################################################
 	
 	//##############################################################
 	// fourier transform
@@ -152,6 +149,7 @@ int main()
 	fftw_plan p;
 	p = fftw_plan_dft_r2c_1d(N,Z,out,FFTW_ESTIMATE);
 	fftw_execute(p);
+ 	//#############################################################
 	
 	cout << "########### COMPUTED FOURIER TRANSFORMS ##########\n\n";
 
