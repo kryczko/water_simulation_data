@@ -77,17 +77,20 @@ int main()
         int nframes = a2x.size() / noa2;
 	
 	//velocity array for every frame, atom2 and in the x,y, and z direction
-	double vel[nframes - 1][noa2][3];
+	double vel[nframes][noa2][3];
+	vel[0][0][0] = 0.0;
+	vel[0][0][1] = 0.0;
+	vel[0][0][2] = 0.0;
 	ofstream output;
 	output.open("freq.dat");
 
-	for (int i = 0; i < nframes - 1; i ++)
+	for (int i = 1; i < nframes; i ++)
 	{
 		for (int j = 0; j < noa2; j ++)
 		{
-			double dx = a2x[j + (i + 1)*noa2] - a2x[j + (i)*noa2];
-                        double dy = a2y[j + (i + 1)*noa2] - a2y[j + (i)*noa2];
-                        double dz = a2z[j + (i + 1)*noa2] - a2z[j + (i)*noa2];
+			double dx = a2x[j + i*noa2] - a2x[j + (i-1)*noa2];
+                        double dy = a2y[j + i*noa2] - a2y[j + (i-1)*noa2];
+                        double dz = a2z[j + i*noa2] - a2z[j + (i-1)*noa2];
 
 			dx -= xlat*pbc_round(dx/xlat); 
 			dy -= ylat*pbc_round(dy/ylat);
@@ -101,11 +104,11 @@ int main()
 	cout << "########## COMPUTED VELOCITES FROM DATAFILE ##########\n\n";
 
 	double *Z;
-	Z = new double [nframes - 1];
+	Z = new double [nframes];
 
-	for (int m = 0; m < nframes - 1; m ++)
+	for (int m = 0; m < nframes; m ++)
 	{
-		for (int n = 0; n < nframes - 1 - m - 1; n ++)
+		for (int n = 0; n < nframes - m - 1; n ++)
 		{
 			for (int i = 0; i < noa2; i ++)
 			{
@@ -116,22 +119,25 @@ int main()
 			}
 		}
 	}
-	for (int m = 0; m < nframes - 1; m ++)
+	for (int m = 0; m < nframes; m ++)
 	{
 		Z[m] /= (nframes - m);
 	}
-	for (int m = 1; m < nframes - 1; m ++)
+	for (int m = 1; m < nframes; m ++)
 	{
 		Z[m] /= Z[0];
 	}
+	
 	cout << "########## COMPUTED THE VELOCITY AUTOCORRELATION FUNCTION ##########\n\n";
 	
 	//#############################################################################
 	// pad the function with a gaussian function
 
-	int N = nframes - 1;
+	int N = nframes;
 	double sigma = N / 2.5;
-	
+	double PI = 3.14159265359;
+	double c = 3e10; // cm/s
+
 	for (int i = 0; i < N; i ++)
 	{
 		Z[i] *= exp(-i*i / (2*sigma*sigma)) / (sigma * sqrt(2*3.14159265359));
@@ -139,7 +145,8 @@ int main()
 	for (int m = 1; m < N; m ++)
 	{
 		Z[m] /= Z[0];
-	}	
+	}
+	
 	//#################################################################################
 	
 	//##############################################################
@@ -155,7 +162,7 @@ int main()
 
 	for (int i = 0; i < (N/2)+1; i ++)
 	{
-		output << i <<"\t"<< out[i][0] << "\t" << out[i][1] << endl;	
+		output << i*2*PI/timestep <<"\t"<< out[i][0]/sqrt(2*PI) << "\t" << out[i][1]/sqrt(2*PI) << endl;	
 	}
 	cout << "######### OUTPUTTED DATA TO freq.dat ##########\n\n";
 	
