@@ -86,8 +86,8 @@ for (int i = 0; i < nooa; i ++)
 vector <double> everything;
 hbonds_outputfile.open("hbonds_contour.dat");
 
-int xcoord, ycoord, xybin[13][13] = {};
-double xyhbin[13][13] = {}, hcount[nooa] ;
+int xcoord, ycoord, xybin[15][15] = {};
+double xyhbin[15][15] = {}, hcount[nooa] ;
 
 for (int i = 0; i < timesteps; i ++)
 {
@@ -209,9 +209,9 @@ for (int i = 0; i < timesteps; i ++)
 
 }
 
-for (int i = 0; i < 13; i ++)
+for (int i = 0; i < 15; i ++)
 {
-	for (int j = 0; j < 13; j ++)
+	for (int j = 0; j < 15; j ++)
 	{	
 		if (xybin[i][j] != 0)
 		{
